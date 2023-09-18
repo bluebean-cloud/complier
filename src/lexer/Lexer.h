@@ -6,7 +6,6 @@
 #define BLUEBEAN_COMPLIER_LEXER_H
 
 #include "unordered_map"
-#include <string_view>
 #include "string"
 #include "vector"
 
@@ -18,7 +17,7 @@ public:
     static void init(const std::string& input) {
         Lexer::content = input;
     }
-    static const std::unordered_map<std::string_view, std::string_view> KEY_TYPE_MAP;
+    static const std::unordered_map<std::string, std::string> KEY_TYPE_MAP;
 
     static std::string content;
     static Token next();
