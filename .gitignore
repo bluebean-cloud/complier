@@ -28,6 +28,11 @@ bin/
 .idea
 *.xml
 *.iml
+*.txt
+*.jar
+*.zip
+testcase
+
 
 ### Mac OS ###
 .DS_Store
