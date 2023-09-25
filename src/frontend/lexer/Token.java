@@ -1,8 +1,8 @@
 package frontend.lexer;
 
 public class Token {
-    private String type;
-    private String value;
+    public String type;
+    public String value;
     public int lineNumber;
 
     Token(String type, String value, int line) {

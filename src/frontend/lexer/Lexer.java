@@ -51,6 +51,50 @@ public class Lexer {
         KEY_TYPE_MAP.put("while", "WHILETK");
     }
 
+    int cnt = 0;
+    public void nextToken() {
+        cnt++;
+    }
+
+    public boolean containGetInt() {
+        for (int i = cnt; i < tokens.size(); i++) {
+            if (tokens.get(i).value.equals("=")) {
+                return tokens.get(i + 1).value.equals("getint");
+            }
+            if (tokens.get(i).value.equals(";")) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public boolean containAssign() {
+        for (int i = cnt; i < tokens.size(); i++) {
+            if (tokens.get(i).value.equals("=")) {
+                return true;
+            }
+            if (tokens.get(i).value.equals(";")) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public Token peek() {
+        if (cnt >= tokens.size()) {
+            return new Token("END", "END", -1);
+        }
+        return tokens.get(cnt);
+    }
+
+    public Token preView(int offset) {
+        return tokens.get(cnt + offset);
+    }
+
+    public boolean isEnd() {
+        return cnt >= tokens.size();
+    }
+
     public void clear() {
         tokens.clear();
         position = 0;

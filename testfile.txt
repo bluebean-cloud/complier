@@ -1,4 +1,6 @@
-//函数定义函数实参 
-void funcnon1(){
-	
-} 
+int main(){
+    int c;
+    c= getint();
+    printf("%d",c);
+    return c;
+}
