@@ -30,7 +30,7 @@ public class Parser {
     }
 
     private GrammarNode parseBType() throws NotMatchException {
-        Assert.isOf(Lexer.LEXER.peek().value, "int");
+        Assert.isOf(Lexer.LEXER.peek().value, Lexer.LEXER.peek().lineNumber, "int");
         GrammarNode node = new GrammarNode("BType");
         node.tokens.add(Lexer.LEXER.peek());
         Lexer.LEXER.nextToken();
@@ -46,7 +46,7 @@ public class Parser {
     }
 
     private GrammarNode parseSym(String symbol) throws NotMatchException {
-        Assert.isOf(Lexer.LEXER.peek().value, symbol);
+        Assert.isOf(Lexer.LEXER.peek().value, Lexer.LEXER.peek().lineNumber, symbol);
         GrammarNode node = new GrammarNode("");
         node.tokens.add(Lexer.LEXER.peek());
         Lexer.LEXER.nextToken();
@@ -91,6 +91,18 @@ public class Parser {
 
     private GrammarNode parseConstInitVal() throws NotMatchException {
         GrammarNode node = new GrammarNode("ConstInitVal");
+        if (Judge.isOf(Lexer.LEXER.peek().value, "{")) {
+            node.addChild(parseSym("{"));
+            if (!Judge.isOf(Lexer.LEXER.peek().value, "}")) {
+                node.addChild(parseConstInitVal());
+                while (Judge.isOf(Lexer.LEXER.peek().value, ",")) {
+                    node.addChild(parseSym(","));
+                    node.addChild(parseConstInitVal());
+                }
+            }
+            node.addChild(parseSym("}"));
+            return node;
+        }
         node.addChild(parseConstExp());
         return node;
     }
@@ -195,6 +207,16 @@ public class Parser {
         return node;
     }
 
+    private GrammarNode parseFuncRParams() throws NotMatchException {
+        GrammarNode node = new GrammarNode("FuncRParams");
+        node.addChild(parseExp());
+        while (Judge.isOf(Lexer.LEXER.peek().value, ",")) {
+            node.addChild(parseSym(","));
+            node.addChild(parseExp());
+        }
+        return node;
+    }
+
     private GrammarNode parseBlock() throws NotMatchException {
         GrammarNode node = new GrammarNode("Block");
         node.addChild(parseSym("{"));
@@ -244,6 +266,14 @@ public class Parser {
             node.addChild(parseSym(";"));
             if (!Judge.isOf(Lexer.LEXER.peek().value, ")"))
                 node.addChild(parseForStmt());
+            node.addChild(parseSym(")"));
+            node.addChild(parseStmt());
+            return node;
+        }
+        if (Judge.isOf(Lexer.LEXER.peek().value, "while")) {
+            node.addChild(parseSym("while"));
+            node.addChild(parseSym("("));
+            node.addChild(parseCond());
             node.addChild(parseSym(")"));
             node.addChild(parseStmt());
             return node;
@@ -311,6 +341,8 @@ public class Parser {
     private GrammarNode parseForStmt() throws NotMatchException {
         GrammarNode node = new GrammarNode("ForStmt");
         node.addChild(parseLVal());
+        node.addChild(parseSym("="));
+        node.addChild(parseExp());
         return node;
     }
 
@@ -323,7 +355,7 @@ public class Parser {
     private GrammarNode parseLOrExp() throws NotMatchException {
         GrammarNode node = new GrammarNode("LOrExp");
         node.addChild(parseLAndExp());
-        if (Judge.isOf(Lexer.LEXER.peek().value, "||")) {
+        while (Judge.isOf(Lexer.LEXER.peek().value, "||")) {
             node.addChild(parseSym("||"));
             node.addChild(parseLOrExp());
         }
@@ -333,7 +365,7 @@ public class Parser {
     private GrammarNode parseLAndExp() throws NotMatchException {
         GrammarNode node = new GrammarNode("LAndExp");
         node.addChild(parseEqExp());
-        if (Judge.isOf(Lexer.LEXER.peek().value, "&&")) {
+        while (Judge.isOf(Lexer.LEXER.peek().value, "&&")) {
             node.addChild(parseSym("&&"));
             node.addChild(parseLAndExp());
         }
@@ -343,7 +375,7 @@ public class Parser {
     private GrammarNode parseEqExp() throws NotMatchException {
         GrammarNode node = new GrammarNode("EqExp");
         node.addChild(parseRelExp());
-        if (Judge.isOf(Lexer.LEXER.peek().value, "==", "!=")) {
+        while (Judge.isOf(Lexer.LEXER.peek().value, "==", "!=")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
             node.addChild(parseEqExp());
         }
@@ -353,7 +385,7 @@ public class Parser {
     private GrammarNode parseRelExp() throws NotMatchException {
         GrammarNode node = new GrammarNode("RelExp");
         node.addChild(parseAddExp());
-        if (Judge.isOf(Lexer.LEXER.peek().value, "<", ">", "<=", ">=")) {
+        while (Judge.isOf(Lexer.LEXER.peek().value, "<", ">", "<=", ">=")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
             node.addChild(parseRelExp());
         }
@@ -369,7 +401,7 @@ public class Parser {
     private GrammarNode parseAddExp() throws NotMatchException {
         GrammarNode node = new GrammarNode("AddExp");
         node.addChild(parseMulExp());
-        if (Judge.isOf(Lexer.LEXER.peek().value, "+", "-")) {
+        while (Judge.isOf(Lexer.LEXER.peek().value, "+", "-")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
             node.addChild(parseAddExp());
         }
@@ -379,7 +411,7 @@ public class Parser {
     private GrammarNode parseMulExp() throws NotMatchException {
         GrammarNode node = new GrammarNode("MulExp");
         node.addChild(parseUnaryExp());
-        if (Judge.isOf(Lexer.LEXER.peek().value, "*", "/", "%")) {
+        while (Judge.isOf(Lexer.LEXER.peek().value, "*", "/", "%")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
             node.addChild(parseMulExp());
         }
@@ -397,7 +429,7 @@ public class Parser {
             node.addChild(parseIdent());
             node.addChild(parseSym("("));
             if (!Lexer.LEXER.peek().value.equals(")")) {
-                node.addChild(parseFuncFParams());
+                node.addChild(parseFuncRParams());
             }
             node.addChild(parseSym(")"));
             return node;
@@ -430,7 +462,7 @@ public class Parser {
             node.addChild(parseNumber());
             return node;
         }
-        throw new NotMatchException();
+        throw new NotMatchException("in line " + Lexer.LEXER.peek().lineNumber + ": " + Lexer.LEXER.peek().value);
     }
 
     private GrammarNode parseLVal() throws NotMatchException {

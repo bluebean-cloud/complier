@@ -31,6 +31,7 @@ bin/
 *.txt
 *.jar
 *.zip
+sysy-testcase
 testcase
 
 

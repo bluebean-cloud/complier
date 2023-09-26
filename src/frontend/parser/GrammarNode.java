@@ -24,11 +24,19 @@ public class GrammarNode {
         for (Token token: tokens) {
             str.append(token.toString()).append('\n');
         }
+        boolean flag = true;
         for (GrammarNode node: childs) {
             str.append(node.toString());
+            if (flag && Judge.isOf(grammarType, "AddExp", "MulExp", "LOrExp", "LAndExp", "EqExp", "RelExp")) {
+               str.append("<").append(grammarType).append(">").append("\n");
+            }
+            flag = false;
         }
-        if (!grammarType.isEmpty() && !Judge.isOf(grammarType, "BlockItem", "Decl", "BType", "Ident", "FormatString"))
+
+        if (!grammarType.isEmpty() && !Judge.isOf(grammarType,
+                "BlockItem", "Decl", "BType", "Ident", "FormatString", "IntConst", "AddExp", "MulExp", "LOrExp", "LAndExp", "EqExp", "RelExp"))
             str.append("<").append(grammarType).append(">").append('\n');
+
         return str.toString();
     }
 }

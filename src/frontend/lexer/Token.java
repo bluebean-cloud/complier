@@ -4,6 +4,8 @@ public class Token {
     public String type;
     public String value;
     public int lineNumber;
+    public Token before = null;
+    public Token next = null;
 
     Token(String type, String value, int line) {
         this.type = type;
@@ -13,6 +15,9 @@ public class Token {
 
     @Override
     public String toString() {
-        return String.format("%s %s", type, value);
+        String preStr = before == null ? "BEGIN" : before.value;
+        String nexStr = next == null ? "END" : next.value;
+        return String.format("line%d: %s <%s %s> %s", lineNumber, preStr, type, value, nexStr);
     }
+
 }

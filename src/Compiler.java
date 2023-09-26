@@ -14,7 +14,7 @@ public class Compiler {
             String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
             Lexer.LEXER.run(content);
             Parser.PARSER.run();
-            System.out.println(Parser.PARSER.root);
+            output.print(Parser.PARSER.root);
         } catch (IOException | NotMatchException e) {
             throw new RuntimeException(e);
         }

@@ -7,7 +7,7 @@ public class Lexer {
     public static Lexer LEXER = new Lexer();
     private Lexer() {}
 
-    private static HashMap<String, String> KEY_TYPE_MAP = new HashMap<>();
+    private static final HashMap<String, String> KEY_TYPE_MAP = new HashMap<>();
     private int position = 0;
     private int lineNumber = 1;
     public String content;
@@ -95,17 +95,17 @@ public class Lexer {
         return cnt >= tokens.size();
     }
 
-    public void clear() {
-        tokens.clear();
-        position = 0;
-        lineNumber = 1;
-    }
-
     public void run(String str) {
         content = str;
         preProcess();
         while (position < content.length()) {
             tokens.add(next());
+        }
+        for (int i = 0; i < tokens.size() - 1; i++) {
+            tokens.get(i).next = tokens.get(i + 1);
+        }
+        for (int i = 1; i < tokens.size(); i++) {
+            tokens.get(i).before = tokens.get(i - 1);
         }
     }
 
