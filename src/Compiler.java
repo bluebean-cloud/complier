@@ -8,13 +8,15 @@ import Util.NotMatchException;
 import frontend.lexer.Lexer;
 import frontend.parser.Parser;
 
+
+
 public class Compiler {
     public static void main(String[] args) {
         try (PrintWriter output = new PrintWriter("output.txt")) {
             String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
             Lexer.LEXER.run(content);
             Parser.PARSER.run();
-            output.print(Parser.PARSER.root);
+            System.out.print(Parser.PARSER.root);
         } catch (IOException | NotMatchException e) {
             throw new RuntimeException(e);
         }
