@@ -1,5 +1,7 @@
 package frontend.lexer;
 
+import Util.ErrorLog;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -49,6 +51,10 @@ public class Lexer {
         KEY_TYPE_MAP.put("!", "NOT");
         KEY_TYPE_MAP.put("*", "MULT");
         KEY_TYPE_MAP.put("while", "WHILETK");
+    }
+
+    public boolean isNewLine() {
+        return LEXER.peek().lineNumber != LEXER.preView(-1).lineNumber;
     }
 
     int cnt = 0;
@@ -204,6 +210,19 @@ public class Lexer {
         }
     }
 
+    public boolean isLegal(String buf) {
+        for (int i = 1; i < buf.length() - 1; i++) {
+            char ch = buf.charAt(i);
+            if ((ch == '\\' && buf.charAt(i + 1) != 'n') || (ch == '%' && buf.charAt(i + 1) != 'd')) {
+                return false;
+            }
+            if (!(ch == 32 || ch == 33 || ch >= 40 && ch <= 126)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private Token getStr() {
         StringBuilder buf = new StringBuilder();
         buf.append(content.charAt(position++));
@@ -211,6 +230,9 @@ public class Lexer {
             buf.append(content.charAt(position++));
         }
         buf.append(content.charAt(position++));
+        if (!isLegal(buf.toString())) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(lineNumber, 'a'));
+        }
         return new Token("STRCON", buf.toString(), lineNumber);
     }
 

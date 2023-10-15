@@ -18,6 +18,12 @@ public class GrammarNode {
         childs.add(node);
     }
 
+    public String comment;
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
