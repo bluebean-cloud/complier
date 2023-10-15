@@ -1,6 +1,7 @@
 package frontend.parser;
 
 import Util.Assert;
+import Util.ErrorLog;
 import Util.Judge;
 import Util.NotMatchException;
 import frontend.lexer.Lexer;
@@ -72,7 +73,11 @@ public class Parser {
             node.addChild(parseSym(","));
             node.addChild(parseConstDef());
         }
-        node.addChild(parseSym(";"));
+        try {
+            node.addChild(parseSym(";"));
+        } catch (NotMatchException e) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+        }
         return node;
     }
 
@@ -82,7 +87,11 @@ public class Parser {
         while (Judge.isOf(Lexer.LEXER.peek().value, "[")) {
             node.addChild(parseSym("["));
             node.addChild(parseConstExp());
-            node.addChild(parseSym("]"));
+            try {
+                node.addChild(parseSym("]"));
+            }  catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'k'));
+            }
         }
         node.addChild(parseSym("="));
         node.addChild(parseConstInitVal());
@@ -114,8 +123,11 @@ public class Parser {
         while (Judge.isOf(Lexer.LEXER.peek().value, ",")) {
             node.addChild(parseSym(","));
             node.addChild(parseVarDef());
+        }try {
+            node.addChild(parseSym(";"));
+        } catch (NotMatchException e) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
         }
-        node.addChild(parseSym(";"));
         return node;
     }
     private GrammarNode parseVarDef() throws NotMatchException {
@@ -124,7 +136,11 @@ public class Parser {
         while (Judge.isOf(Lexer.LEXER.peek().value, "[")) {
             node.addChild(parseSym("["));
             node.addChild(parseConstExp());
-            node.addChild(parseSym("]"));
+            try {
+                node.addChild(parseSym("]"));
+            }  catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'k'));
+            }
         }
         if (Judge.isOf(Lexer.LEXER.peek().value, "=")) {
             node.addChild(parseSym("="));
@@ -158,17 +174,25 @@ public class Parser {
             node.addChild(parseSym("int"));
             node.addChild(parseSym("main"));
             node.addChild(parseSym("("));
-            node.addChild(parseSym(")"));
+            try {
+                node.addChild(parseSym(")"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+            }
             node.addChild(parseBlock());
             return node;
         }
         node.addChild(parseFuncType());
         node.addChild(parseIdent());
         node.addChild(parseSym("("));
-        if (!Lexer.LEXER.peek().value.equals(")")) {
+        if (!Judge.isOf(Lexer.LEXER.peek().value, ")", "{")) {
             node.addChild(parseFuncFParams());
         }
-        node.addChild(parseSym(")"));
+        try {
+            node.addChild(parseSym(")"));
+        } catch (NotMatchException e) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+        }
         node.addChild(parseBlock());
         return node;
     }
@@ -197,11 +221,19 @@ public class Parser {
         node.addChild(parseIdent());
         if (Lexer.LEXER.peek().value.equals("[")) {
             node.addChild(parseSym("["));
-            node.addChild(parseSym("]"));
+            try {
+                node.addChild(parseSym("]"));
+            }  catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'k'));
+            }
             while (Lexer.LEXER.peek().value.equals("[")) {
                 node.addChild(parseSym("["));
                 node.addChild(parseConstExp());
-                node.addChild(parseSym("]"));
+                try {
+                    node.addChild(parseSym("]"));
+                }  catch (NotMatchException e) {
+                    ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'k'));
+                }
             }
         }
         return node;
@@ -247,7 +279,11 @@ public class Parser {
             node.addChild(parseSym("if"));
             node.addChild(parseSym("("));
             node.addChild(parseCond());
-            node.addChild(parseSym(")"));
+            try {
+                node.addChild(parseSym(")"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+            }
             node.addChild(parseStmt());
             if (Judge.isOf(Lexer.LEXER.peek().value, "else")) {
                 node.addChild(parseSym("else"));
@@ -258,15 +294,27 @@ public class Parser {
         if (Judge.isOf(Lexer.LEXER.peek().value, "for")) {
             node.addChild(parseSym("for"));
             node.addChild(parseSym("("));
-            if (!Judge.isOf(Lexer.LEXER.peek().value, ";"))
+            if (!Judge.isOf(Lexer.LEXER.peek().value, ";") && Lexer.LEXER.peek().value.charAt(0) != ')')
                 node.addChild(parseForStmt());
-            node.addChild(parseSym(";"));
-            if (!Judge.isOf(Lexer.LEXER.peek().value, ";"))
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
+            if (!Judge.isOf(Lexer.LEXER.peek().value, ";") && Lexer.LEXER.peek().value.charAt(0) != ')')
                 node.addChild(parseCond());
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             if (!Judge.isOf(Lexer.LEXER.peek().value, ")"))
                 node.addChild(parseForStmt());
-            node.addChild(parseSym(")"));
+            try {
+                node.addChild(parseSym(")"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+            }
             node.addChild(parseStmt());
             return node;
         }
@@ -280,19 +328,31 @@ public class Parser {
         }
         if (Judge.isOf(Lexer.LEXER.peek().value, "break")) {
             node.addChild(parseSym("break"));
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             return node;
         }
         if (Judge.isOf(Lexer.LEXER.peek().value, "continue")) {
             node.addChild(parseSym("continue"));
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             return node;
         }
         if (Judge.isOf(Lexer.LEXER.peek().value, "return")) {
             node.addChild(parseSym("return"));
-            if (!Judge.isOf(Lexer.LEXER.peek().value, ";"))
+            if (!Judge.isOf(Lexer.LEXER.peek().value, ";") && !Lexer.LEXER.isNewLine())
                 node.addChild(parseExp());
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             return node;
         }
         if (Judge.isOf(Lexer.LEXER.peek().value, "printf")) {
@@ -303,8 +363,16 @@ public class Parser {
                 node.addChild(parseSym(","));
                 node.addChild(parseExp());
             }
-            node.addChild(parseSym(")"));
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(")"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+            }
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             return node;
         }
         if (Lexer.LEXER.containGetInt()) {
@@ -312,21 +380,37 @@ public class Parser {
             node.addChild(parseSym("="));
             node.addChild(parseSym("getint"));
             node.addChild(parseSym("("));
-            node.addChild(parseSym(")"));
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(")"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+            }
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             return node;
         }
         if (Lexer.LEXER.containAssign()) {
             node.addChild(parseLVal());
             node.addChild(parseSym("="));
             node.addChild(parseExp());
-            node.addChild(parseSym(";"));
+            try {
+                node.addChild(parseSym(";"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+            }
             return node;
         }
         if (!Judge.isOf(Lexer.LEXER.peek().value, ";")) {
             node.addChild(parseExp());
         }
-        node.addChild(parseSym(";"));
+        try {
+            node.addChild(parseSym(";"));
+        } catch (NotMatchException e) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
+        }
         return node;
     }
 
@@ -428,10 +512,14 @@ public class Parser {
         if (Lexer.LEXER.preView(0).type.equals("IDENFR") && Lexer.LEXER.preView(1).value.equals("(")) {
             node.addChild(parseIdent());
             node.addChild(parseSym("("));
-            if (!Lexer.LEXER.peek().value.equals(")")) {
+            if (!Lexer.LEXER.peek().value.equals(")") && !Judge.isOf(Lexer.LEXER.peek().value, "+", "-", "*", "/", "%", ";")) {
                 node.addChild(parseFuncRParams());
             }
-            node.addChild(parseSym(")"));
+            try {
+                node.addChild(parseSym(")"));
+            } catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
+            }
             return node;
         }
         node.addChild(parsePrimaryExp());
@@ -471,7 +559,11 @@ public class Parser {
         while (Judge.isOf(Lexer.LEXER.peek().value, "[")) {
             node.addChild(parseSym("["));
             node.addChild(parseExp());
-            node.addChild(parseSym("]"));
+            try {
+                node.addChild(parseSym("]"));
+            }  catch (NotMatchException e) {
+                ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'k'));
+            }
         }
         return node;
     }
