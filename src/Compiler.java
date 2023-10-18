@@ -8,7 +8,7 @@ import Util.ErrorLog;
 import Util.NotMatchException;
 import frontend.lexer.Lexer;
 import frontend.parser.Parser;
-
+import frontend.visitor.Visitor;
 
 
 public class Compiler {
@@ -25,7 +25,8 @@ public class Compiler {
                 }
                 return;
             }
-            output.print(Parser.PARSER.root);
+            // output.print(Parser.PARSER.root);
+            Visitor.VISITOR.run();
         } catch (IOException | NotMatchException e) {
             throw new RuntimeException(e);
         }

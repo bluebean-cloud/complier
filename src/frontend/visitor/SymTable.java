@@ -10,6 +10,11 @@ public class SymTable {
     public boolean inLoop = false;
     public boolean inCond = false;
     public ArrayList<SymTable> symTables = new ArrayList<>(); // 符号表树
+    public ArrayList<Symbol> symbols = new ArrayList<>();
+
+    public void addSymbol(Symbol symbol) {
+        symbols.add(symbol);
+    }
 
     public void setInLoop() {
         inLoop = true;
@@ -23,5 +28,8 @@ public class SymTable {
         parent = symTable;
     }
 
+    public SymTable(SymTable parent) {
+        this.parent = parent;
+    }
 
 }
