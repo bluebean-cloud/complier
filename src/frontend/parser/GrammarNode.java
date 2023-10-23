@@ -30,6 +30,10 @@ public class GrammarNode {
         cnt++;
     }
 
+    public boolean hasNextChild() {
+        return cnt + 1 < childs.size();
+    }
+
     public GrammarNode(String type) {
         grammarType = type;
     }

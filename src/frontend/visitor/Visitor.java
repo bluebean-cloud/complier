@@ -75,7 +75,9 @@ public class Visitor {
             if (child.getFirstTokenValue().equals(",")) {
                 continue;
             }
-            funcFParams.add(visitFParam(child));
+            FuncFParam funcFParam = visitFParam(child);
+            curTable.addSymbol(new Symbol(funcFParam));
+            funcFParams.add(funcFParam);
         }
         return funcFParams;
     }
@@ -110,7 +112,7 @@ public class Visitor {
         }
         node.nextChild();   // 通过 '{'
         while (!node.getTokenValue().equals("}")) {
-
+            visitBlockItem(node.getChild());
             node.nextChild();
         }
         if (sym) {
@@ -124,6 +126,7 @@ public class Visitor {
             case DECL:
                 break;
             case STMT:
+                visitStmt(node.getChild());
                 break;
             default:
                 System.exit(-2);
@@ -134,8 +137,10 @@ public class Visitor {
         Assert.isOf(node.grammarType, "Stmt");
         switch (node.type) {
             case BLOCK_STMT:
+                visitBlock(node.getChild(), true);
                 break;
             case IF_STMT:
+                visitIfStmt(node);
                 break;
             case FOR_STMT:
                 break;
@@ -160,6 +165,99 @@ public class Visitor {
         }
     }
 
+    private void visitIfStmt(GrammarNode node) {
+        node.nextChild();   // 通过 if
+        node.nextChild();   // 通过 (
+    }
 
+    private void visitCond(GrammarNode node) {
+
+    }
+
+    private void visitLOrExp(GrammarNode node) {
+
+    }
+
+    private void visitLAndExp(GrammarNode node) {
+
+    }
+
+    private void visitEqExp(GrammarNode node) {
+
+    }
+
+    private void visitRelExp(GrammarNode node) throws NotMatchException {
+        Assert.isOf(node.grammarType, "RelExp");
+        
+    }
+
+    private void visitExp(GrammarNode node) throws NotMatchException {
+        Assert.isOf(node.grammarType, "Exp");
+        visitAddExp(node.getChild());
+    }
+
+    private void visitAddExp(GrammarNode node) throws NotMatchException {
+        Assert.isOf(node.grammarType, "AddExp");
+        visitMulExp(node.getChild());
+        node.nextChild();
+        if (node.hasNextChild()) {
+            // 应该对运算符号做一些处理，先不管了（
+            node.nextChild();   // 通过 '+', '-'
+            visitAddExp(node.getChild());   // 右递归
+            node.nextChild();
+        }
+    }
+
+    private void visitMulExp(GrammarNode node) throws NotMatchException {
+        Assert.isOf(node.grammarType, "MulExp");
+        visitUnaryExp(node.getChild());
+        node.nextChild();
+        if (node.hasNextChild()) {
+            node.nextChild();   // 通过 '*' '/'
+            visitMulExp(node.getChild());
+            node.nextChild();
+        }
+    }
+
+    private void visitUnaryExp(GrammarNode node) throws NotMatchException {
+        Assert.isOf(node.grammarType, "UnaryExp");
+        switch (node.type) {
+            case OP_EXP:
+                node.nextChild();   // 符号
+                visitUnaryExp(node.getChild());
+                break;
+            case FUNC_CALL:
+                node.nextChild();   // 通过函数名
+                node.nextChild();   // 通过 '('
+                if (node.getChild().grammarType.equals("FuncRParams")) {
+                    visitFuncRParams(node.getChild());
+                    node.nextChild();
+                }
+                node.nextChild();   // 通过 ')'
+                break;
+            case PRIMARY_EXP:
+                visitPrimaryExp(node.getChild());
+                break;
+        }
+    }
+
+    private void visitPrimaryExp(GrammarNode node) {
+        switch (node.type) {
+            case WITH_BRACKET:
+                break;
+            case INTCON:
+                break;
+            case IDENFR:
+                break;
+        }
+    }
+
+    private void visitLVal(GrammarNode node) {
+
+    }
+
+    private void visitFuncRParams(GrammarNode node) {
+
+    }
 
 }

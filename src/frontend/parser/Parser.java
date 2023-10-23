@@ -551,6 +551,7 @@ public class Parser {
         if (Judge.isOf(Lexer.LEXER.peek().value, "+", "-", "!")) {
             node.addChild(parseUnaryOp(Lexer.LEXER.peek().value));
             node.addChild(parseUnaryExp());
+            node.setType(Type.OP_EXP);
             return node;
         }
         if (Lexer.LEXER.preView(0).type.equals("IDENFR") && Lexer.LEXER.preView(1).value.equals("(")) {
@@ -565,9 +566,11 @@ public class Parser {
                 ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'j'));
                 node.addChild(dealErr(")"));
             }
+            node.setType(Type.FUNC_CALL);
             return node;
         }
         node.addChild(parsePrimaryExp());
+        node.setType(Type.PRIMARY_EXP);
         return node;
     }
 
@@ -585,14 +588,17 @@ public class Parser {
             node.addChild(parseSym("("));
             node.addChild(parseExp());
             node.addChild(parseSym(")"));
+            node.setType(Type.WITH_BRACKET);
             return node;
         }
         if (Judge.isOf(Lexer.LEXER.peek().type, "IDENFR")) {
             node.addChild(parseLVal());
+            node.setType(Type.IDENFR);
             return node;
         }
         if (Judge.isOf(Lexer.LEXER.peek().type, "INTCON")) {
             node.addChild(parseNumber());
+            node.setType(Type.INTCON);
             return node;
         }
         throw new NotMatchException("in line " + Lexer.LEXER.peek().lineNumber + ": " + Lexer.LEXER.peek().value);
