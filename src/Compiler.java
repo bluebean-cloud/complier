@@ -17,16 +17,19 @@ public class Compiler {
             String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
             Lexer.LEXER.run(content);
             Parser.PARSER.run();
+
+            // output.print(Parser.PARSER.root);
+            Visitor.VISITOR.run();
             if (!ErrorLog.ERRORLIST.isEmpty()) {
                 try (PrintWriter errPut = new PrintWriter("error.txt")) {
+                    ErrorLog.ERRORLIST.sort(ErrorLog::compareTo);
                     for (ErrorLog errorLog : ErrorLog.ERRORLIST) {
                         errPut.println(errorLog.toString());
                     }
                 }
                 return;
             }
-            // output.print(Parser.PARSER.root);
-            Visitor.VISITOR.run();
+            output.println(Parser.PARSER.root);
         } catch (IOException | NotMatchException e) {
             throw new RuntimeException(e);
         }

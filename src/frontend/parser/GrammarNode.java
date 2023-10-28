@@ -48,7 +48,19 @@ public class GrammarNode {
         this.type = type;
     }
 
+    public int getFirstTokenLine() {
+        if (tokens.isEmpty()) {
+            return childs.get(0).getFirstTokenLine();
+        }
+        return tokens.get(0).lineNumber;
+    }
 
+    public int getTokenLine() {
+        if (tokens.isEmpty()) {
+            return childs.get(cnt).getFirstTokenLine();
+        }
+        return tokens.get(0).lineNumber;
+    }
 
     public String getFirstTokenValue() {
         if (tokens.isEmpty()) {
@@ -63,13 +75,11 @@ public class GrammarNode {
         for (Token token: tokens) {
             str.append(token.toString()).append('\n');
         }
-        boolean flag = true;
         for (GrammarNode node: childs) {
             str.append(node.toString());
-            if (flag && Judge.isOf(grammarType, "AddExp", "MulExp", "LOrExp", "LAndExp", "EqExp", "RelExp")) {
+            if (Judge.isOf(grammarType, "AddExp", "MulExp", "LOrExp", "LAndExp", "EqExp", "RelExp") && !node.grammarType.isEmpty()) {
                str.append("<").append(grammarType).append(">").append("\n");
             }
-            flag = false;
         }
 
         if (!grammarType.isEmpty() && !Judge.isOf(grammarType,

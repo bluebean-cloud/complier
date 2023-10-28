@@ -5,6 +5,7 @@ import Util.ErrorLog;
 import Util.Judge;
 import Util.NotMatchException;
 import frontend.lexer.Lexer;
+import frontend.lexer.Token;
 
 public class Parser {
 
@@ -56,8 +57,7 @@ public class Parser {
 
     private GrammarNode dealErr(String symbol) {
         GrammarNode node = new GrammarNode("");
-        node.tokens.add(Lexer.LEXER.peek());
-        Lexer.LEXER.nextToken();
+        node.tokens.add(new Token(symbol));
         return node;
     }
 
@@ -65,9 +65,11 @@ public class Parser {
         GrammarNode node = new GrammarNode("Decl");
         if (Judge.isOf(Lexer.LEXER.peek().value, "const")) {
             node.addChild(parseConstDecl());
+            node.setType(Type.DECL);
             return node;
         }
         node.addChild(parseVarDecl());
+        node.setType(Type.DECL);
         return node;
     }
 
@@ -132,7 +134,8 @@ public class Parser {
         while (Judge.isOf(Lexer.LEXER.peek().value, ",")) {
             node.addChild(parseSym(","));
             node.addChild(parseVarDef());
-        }try {
+        }
+        try {
             node.addChild(parseSym(";"));
         } catch (NotMatchException e) {
             ErrorLog.ERRORLIST.add(new ErrorLog(Lexer.LEXER.preView(-1).lineNumber, 'i'));
@@ -172,9 +175,11 @@ public class Parser {
                 }
             }
             node.addChild(parseSym("}"));
+            node.setType(Type.ARRAYINIT);
             return node;
         }
         node.addChild(parseExp());
+        node.setType(Type.EXP);
         return node;
     }
 
@@ -485,7 +490,7 @@ public class Parser {
         node.addChild(parseLAndExp());
         while (Judge.isOf(Lexer.LEXER.peek().value, "||")) {
             node.addChild(parseSym("||"));
-            node.addChild(parseLOrExp());
+            node.addChild(parseLAndExp());
         }
         return node;
     }
@@ -495,7 +500,7 @@ public class Parser {
         node.addChild(parseEqExp());
         while (Judge.isOf(Lexer.LEXER.peek().value, "&&")) {
             node.addChild(parseSym("&&"));
-            node.addChild(parseLAndExp());
+            node.addChild(parseEqExp());
         }
         return node;
     }
@@ -505,7 +510,7 @@ public class Parser {
         node.addChild(parseRelExp());
         while (Judge.isOf(Lexer.LEXER.peek().value, "==", "!=")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
-            node.addChild(parseEqExp());
+            node.addChild(parseRelExp());
         }
         return node;
     }
@@ -515,7 +520,7 @@ public class Parser {
         node.addChild(parseAddExp());
         while (Judge.isOf(Lexer.LEXER.peek().value, "<", ">", "<=", ">=")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
-            node.addChild(parseRelExp());
+            node.addChild(parseAddExp());
         }
         return node;
     }
@@ -531,7 +536,7 @@ public class Parser {
         node.addChild(parseMulExp());
         while (Judge.isOf(Lexer.LEXER.peek().value, "+", "-")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
-            node.addChild(parseAddExp());
+            node.addChild(parseMulExp());
         }
         return node;
     }
@@ -541,7 +546,7 @@ public class Parser {
         node.addChild(parseUnaryExp());
         while (Judge.isOf(Lexer.LEXER.peek().value, "*", "/", "%")) {
             node.addChild(parseSym(Lexer.LEXER.peek().value));
-            node.addChild(parseMulExp());
+            node.addChild(parseUnaryExp());
         }
         return node;
     }
@@ -557,7 +562,7 @@ public class Parser {
         if (Lexer.LEXER.preView(0).type.equals("IDENFR") && Lexer.LEXER.preView(1).value.equals("(")) {
             node.addChild(parseIdent());
             node.addChild(parseSym("("));
-            if (!Lexer.LEXER.peek().value.equals(")") && !Judge.isOf(Lexer.LEXER.peek().value, "+", "-", "*", "/", "%", ";")) {
+            if (!Lexer.LEXER.peek().value.equals(")") && !Judge.isOf(Lexer.LEXER.peek().value, "*", "/", "%", ";")) {
                 node.addChild(parseFuncRParams());
             }
             try {

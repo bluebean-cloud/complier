@@ -216,7 +216,7 @@ public class Lexer {
             if ((ch == '\\' && buf.charAt(i + 1) != 'n') || (ch == '%' && buf.charAt(i + 1) != 'd')) {
                 return false;
             }
-            if (!(ch == 32 || ch == 33 || ch >= 40 && ch <= 126)) {
+            if (!(ch == '%' || ch == 32 || ch == 33 || ch >= 40 && ch <= 126)) {
                 return false;
             }
         }

@@ -5,11 +5,11 @@ import frontend.parser.Type;
 
 public class Symbol {
     public Token token;
-    public boolean isConst = false;
+    private boolean isConst = false;
     public Type type;
     public DataType dataType;
     public String name;
-    public boolean isFunc = false;
+    private boolean isFunc = false;
     public Function function;
 
     public Symbol() {}
@@ -19,5 +19,27 @@ public class Symbol {
         this.name = funcFParam.name;
     }
 
+    public void setType(Type type) {
+        this.type = type;
+    }
 
+    public void setConst(boolean aConst) {
+        isConst = aConst;
+    }
+
+    public boolean isConst() {
+        return isConst;
+    }
+
+    public boolean isFunc() {
+        return isFunc;
+    }
+
+    public void setFunc(boolean func) {
+        isFunc = func;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

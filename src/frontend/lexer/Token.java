@@ -15,6 +15,10 @@ public class Token {
         this.lineNumber = line;
     }
 
+    public Token(String value) {
+        this.value = value;
+    }
+
     @Override
     public String toString() {
         if (DebugConfig.DEBUG) {
