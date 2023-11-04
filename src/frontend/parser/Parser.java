@@ -263,7 +263,9 @@ public class Parser {
 
     private GrammarNode parseFuncRParams() throws NotMatchException {
         GrammarNode node = new GrammarNode("FuncRParams");
-        node.addChild(parseExp());
+        if (!Lexer.LEXER.peek().value.equals(")") && !Judge.isOf(Lexer.LEXER.peek().value, "*", "/", "%", ";")) {
+            node.addChild(parseExp());
+        }
         while (Judge.isOf(Lexer.LEXER.peek().value, ",")) {
             node.addChild(parseSym(","));
             node.addChild(parseExp());
@@ -562,9 +564,7 @@ public class Parser {
         if (Lexer.LEXER.preView(0).type.equals("IDENFR") && Lexer.LEXER.preView(1).value.equals("(")) {
             node.addChild(parseIdent());
             node.addChild(parseSym("("));
-            if (!Lexer.LEXER.peek().value.equals(")") && !Judge.isOf(Lexer.LEXER.peek().value, "*", "/", "%", ";")) {
-                node.addChild(parseFuncRParams());
-            }
+            node.addChild(parseFuncRParams());
             try {
                 node.addChild(parseSym(")"));
             } catch (NotMatchException e) {
@@ -622,12 +622,14 @@ public class Parser {
                 node.addChild(dealErr("]"));
             }
         }
+        node.setType(Type.LVAL);
         return node;
     }
 
     private GrammarNode parseNumber() throws NotMatchException {
         GrammarNode node = new GrammarNode("Number");
         node.addChild(parseIntConst());
+        node.setType(Type.INTCON);
         return node;
     }
 

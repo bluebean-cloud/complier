@@ -15,6 +15,7 @@ public class Visitor {
     private Visitor() {}
 
     SymTable curTable = SymTable.SYMTABLE;
+    Function curFunc;   // 在定义函数的过程中通过 curFunc 来访问当前函数
 
     private boolean isFun = false;
     private boolean isDecl = false;
@@ -90,20 +91,19 @@ public class Visitor {
         symbol.setType(Type.CONSTVAR);
         symbol.setName(node.getTokenValue());
         node.nextChild();   // 通过变量名
-        DataType dataType = new DataType(Type.INT);
-        symbol.dataType = dataType;
+        symbol.dataType = new DataType(Type.INT);
         while (node.getTokenValue().equals("[")) {
             node.nextChild();   // 通过 '['
             DataType new_dataType = new DataType(Type.ARRAY);
             new_dataType.capacity = visitConstExp(node.getChild());
             node.nextChild();   // 通过常数
             node.nextChild();   // 通过 ']'
-            new_dataType.content = dataType;
-            dataType = new_dataType;
+            new_dataType.content = symbol.dataType;
+            symbol.dataType = new_dataType;
         }
         node.nextChild();
-        dataType.values = visitConstInitVal(node.getChild());
-        dataType.padding(); // 填零
+        symbol.dataType.values = visitConstInitVal(node.getChild());
+        symbol.dataType.padding(); // 填零
 
         return symbol;
     }
@@ -259,8 +259,7 @@ public class Visitor {
         symbol.setType(Type.VAR);
         symbol.setName(node.getTokenValue());
         node.nextChild();   // 通过变量名
-        DataType dataType = new DataType(Type.INT);
-        symbol.dataType = dataType;
+        symbol.dataType = new DataType(Type.INT);
         if (node.hasNextChild()) {
             while (node.hasNextChild() && node.getTokenValue().equals("[")) {
                 node.nextChild();   // 通过 '['
@@ -268,8 +267,8 @@ public class Visitor {
                 new_dataType.capacity = visitConstExp(node.getChild());
                 node.nextChild();   // 通过常数
                 node.nextChild();   // 通过 ']'
-                new_dataType.content = dataType;
-                dataType = new_dataType;
+                new_dataType.content = symbol.dataType;
+                symbol.dataType = new_dataType;
             }
             if (node.hasNextChild() && node.getTokenValue().equals("=")) {
                 node.nextChild();
@@ -311,8 +310,9 @@ public class Visitor {
         funcSymbol.setFunc(true);
 
         Function function = new Function();
+        curFunc = function;
         funcSymbol.function = function;
-
+        curTable.addSymbol(funcSymbol);
         // 处理函数头
         if (node.type.equals(Type.MAIN_FUNC_DEF)) {
             function.retType = new DataType(Type.INT);
@@ -320,11 +320,13 @@ public class Visitor {
             function.name = "main";
             funcSymbol.name = "main";
         } else {
-            function.retType = new DataType(Type.valueOf(node.getFirstTokenValue().toUpperCase()));
+            function.retType = new DataType(Type.valueOf(node.getFirstTokenValue().toUpperCase())); // VOID 或 INT
             node.nextChild();   // Ident
             function.name = node.getTokenValue();
             funcSymbol.name = node.getTokenValue();
         }
+        funcSymbol.dataType = new DataType(function.retType.type);
+
         node.nextChild(); // 通过函数名
         node.nextChild(); // 通过 '('
         if (!Judge.isOf(node.getTokenValue(), ")")) { // 存在参数
@@ -332,16 +334,27 @@ public class Visitor {
             node.nextChild();
         }
         node.nextChild(); // 通过 ')'
+        checkReturn(node.getChild());   // 函数有无return判断
         visitBlock(node.getChild(), false); // 分析函数体
+        curTable = curTable.parent;         // 返回上一级符号表
         if (checkReDefine(funcSymbol.name)) {
             ErrorLog.ERRORLIST.add(new ErrorLog(node.getTokenLine(), 'b'));
-            curTable = curTable.parent;         // 返回上一级符号表
         } else {
             funcSymbol.setType(Type.FUNC);
-            curTable = curTable.parent;         // 返回上一级符号表
             curTable.addSymbol(funcSymbol);
         }
         isFun = false;
+        curFunc = null;
+    }
+
+    private void checkReturn(GrammarNode node) {    // 接受 block node
+        if (curFunc.retType.type.equals(Type.VOID)) {
+            return;
+        }
+        ArrayList<GrammarNode> list = node.childs;
+        if (!list.get(list.size() - 2).getFirstTokenValue().equals("return")) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(list.get(list.size() - 1).getTokenLine(), 'g'));
+        }
     }
 
     private ArrayList<FuncFParam> visitFParams(GrammarNode node) throws NotMatchException {
@@ -446,8 +459,10 @@ public class Visitor {
                 visitPrintf(node);
                 break;
             case GETINT_STMT:
+                assertLValIsNotCon(node.getChild());
                 break;
             case ASSIGN_STMT:
+                assertLValIsNotCon(node.getChild());
                 visitLVal(node.getChild());
                 node.nextChild();
                 node.nextChild();   // 通过 '='
@@ -458,6 +473,17 @@ public class Visitor {
                 break;
             case EMPTY_STMT:
                 break;
+        }
+    }
+
+    private void assertLValIsNotCon(GrammarNode node) {
+        if (!node.grammarType.equals("LVal")) {
+            return;
+        }
+        String name = node.getFirstTokenValue();
+        Symbol symbol = findSym(name);
+        if (symbol != null && symbol.isConst()) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(node.getTokenLine(), 'h'));
         }
     }
 
@@ -489,6 +515,9 @@ public class Visitor {
 
     private void visitReturn(GrammarNode node) throws NotMatchException {
         node.nextChild();
+        if (!node.getTokenValue().equals(";") && curFunc.retType.type.equals(Type.VOID)) {  // void 函数有返回值
+            ErrorLog.ERRORLIST.add(new ErrorLog(node.getTokenLine(), 'f'));
+        }
         if (!node.getTokenValue().equals(";")) {
             visitExp(node.getChild());
         }
@@ -521,6 +550,7 @@ public class Visitor {
     }
 
     private void visitForStmt(GrammarNode node) throws NotMatchException {
+        assertLValIsNotCon(node.getChild());
         visitLVal(node.getChild());
         node.nextChild();
         node.nextChild();
@@ -628,20 +658,33 @@ public class Visitor {
 
     private void visitUnaryExp(GrammarNode node) throws NotMatchException {
         Assert.isOf(node.grammarType, "UnaryExp");
+        String funcName;
+        char type = 'z';
+        boolean isErr = false;
         switch (node.type) {
             case OP_EXP:
                 node.nextChild();   // 符号
                 visitUnaryExp(node.getChild());
                 break;
-            case FUNC_CALL: // 函数调用这这里寻找sym有bug
+            case FUNC_CALL:
                 if (findSym(node.getTokenValue()) == null) {
                     ErrorLog.ERRORLIST.add(new ErrorLog(node.getTokenLine(), 'c'));
                 }
+                funcName = node.getTokenValue();
                 node.nextChild();   // 通过函数名
+                
                 node.nextChild();   // 通过 '('
                 if (node.getChild().grammarType.equals("FuncRParams")) {
-                    visitFuncRParams(node.getChild());
+                    try {
+                        visitFuncRParams(node.getChild(), funcName);
+                    } catch (NotMatchException e) {
+                        type = e.type.charAt(0);
+                        isErr = true;
+                    }
                     node.nextChild();
+                }
+                if (isErr) {
+                    ErrorLog.ERRORLIST.add(new ErrorLog(node.getTokenLine(), type));
                 }
                 node.nextChild();   // 通过 ')'
                 break;
@@ -694,15 +737,94 @@ public class Visitor {
         return false;
     }
 
-    private void visitFuncRParams(GrammarNode node) throws NotMatchException {
-        visitExp(node.getChild());
-        node.nextChild();
-
-        while (node.hasNextChild()) {
-            node.nextChild();
+    //
+    private void visitFuncRParams(GrammarNode node, String name) throws NotMatchException {
+        Symbol funcSym = findSym(name);
+        if (funcSym == null) {
+            return;
+        }
+        Function function = funcSym.function;
+        if (function.funcFParams.size() != (node.childs == null ? 0 : node.childs.size() + 1) / 2) {
+            throw new NotMatchException("d");
+        }
+        int cnt = 0;
+        while (cnt < function.funcFParams.size()) {
+            Symbol fParam = new Symbol(function.funcFParams.get(cnt));
+            cnt++;
+            checkFuncRParam(fParam, node.getChild());
             visitExp(node.getChild());
             node.nextChild();
+            node.nextChild();
         }
+    }
+
+    private void checkFuncRParam(Symbol symbol, GrammarNode expNode) {  // symbol 为函数形参类型
+        ArrayList<GrammarNode> unaryList = flatUnaryExp(expNode);
+        DataType dataType = getUnaryDataType(unaryList.get(0));
+        if (!dataType.equalsIgnoreCapacity(symbol.dataType)) {
+            ErrorLog.ERRORLIST.add(new ErrorLog(expNode.getTokenLine(), 'e'));
+        }
+    }
+
+    private DataType getUnaryDataType(GrammarNode node) {
+        switch (node.type) {
+            case FUNC_CALL:
+                return findSym(node.getFirstTokenValue()).dataType;
+            case INTCON:
+                return new DataType(Type.INT);
+            case LVAL:
+                DataType type = findSym(node.getFirstTokenValue()).dataType;
+                int cnt = node.childs.size() - 1;
+                while (cnt > 0) {
+                    type = type.content;
+                    cnt -= 3;
+                }
+                return type;
+        }
+        return null;
+    }
+
+    private ArrayList<GrammarNode> flatUnaryExp(GrammarNode node) { // 扁平化Exp
+        ArrayList<GrammarNode> list = new ArrayList<>();
+
+        int cnt = 0;
+        switch (node.grammarType) {
+            case "Exp":
+                list.addAll(flatUnaryExp(node.getChild()));
+                return list;
+            case "AddExp":
+            case "MulExp":
+                while (cnt < node.childs.size()) {
+                    list.addAll(flatUnaryExp(node.childs.get(cnt)));
+                    cnt += 2;
+                }
+                return list;
+            case "UnaryExp":
+                switch (node.type) {
+                    case FUNC_CALL:
+                        list.add(node);
+                        return list;
+                    case PRIMARY_EXP:
+                        list.addAll(flatUnaryExp(node.childs.get(0)));
+                        return list;
+                    case OP_EXP:
+                        list.addAll(flatUnaryExp(node.childs.get(1)));
+                        return list;
+                }
+            case "PrimaryExp":
+                switch (node.type) {
+                    case WITH_BRACKET:
+                        list.addAll(flatUnaryExp(node.childs.get(1)));
+                        return list;
+                    case IDENFR:
+                    case INTCON:
+                        list.add(node.childs.get(0));
+                        return list;
+                }
+
+        }
+
+        return list;
     }
 
 }

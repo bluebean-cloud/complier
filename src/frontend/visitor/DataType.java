@@ -14,7 +14,7 @@ public class DataType {
 
     ArrayList<Integer> values = new ArrayList<>();  // 最顶层的DataType持有值
 
-    public void padding() {
+    public void padding() { // 数组常量填充
         if (type.equals(Type.INT)) {
             return;
         }
@@ -27,6 +27,21 @@ public class DataType {
         while (values.size() < t) {
             values.add(0);
         }
+    }
+
+    public boolean equalsIgnoreCapacity(DataType dataType) {
+        if (type == Type.INT && dataType.type == Type.INT) {
+            return true;
+        }
+        if (type != Type.ARRAY || dataType.type != Type.ARRAY) {
+            return false;
+        }
+        DataType temType = this;
+        while (temType.content != null && dataType.content != null) {
+            temType = temType.content;
+            dataType = dataType.content;
+        }
+        return temType.type.equals(dataType.type);
     }
 
     @Override

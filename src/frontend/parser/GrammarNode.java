@@ -72,6 +72,9 @@ public class GrammarNode {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
+        if (grammarType.equals("FuncRParams") && childs.isEmpty()) {
+            return "";
+        }
         for (Token token: tokens) {
             str.append(token.toString()).append('\n');
         }
