@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import Util.DebugConfig;
 import Util.ErrorLog;
 import Util.NotMatchException;
 import frontend.lexer.Lexer;
@@ -20,7 +21,7 @@ public class Compiler {
 
             // output.print(Parser.PARSER.root);
             Visitor.VISITOR.run();
-            if (!ErrorLog.ERRORLIST.isEmpty()) {
+            if (!ErrorLog.ERRORLIST.isEmpty() && DebugConfig.ERROR) {
                 try (PrintWriter errPut = new PrintWriter("error.txt")) {
                     ErrorLog.ERRORLIST.sort(ErrorLog::compareTo);
                     for (ErrorLog errorLog : ErrorLog.ERRORLIST) {
