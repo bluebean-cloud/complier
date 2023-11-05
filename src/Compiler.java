@@ -4,9 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import Util.DebugConfig;
-import Util.ErrorLog;
-import Util.NotMatchException;
+import util.DebugConfig;
+import util.ErrorLog;
+import util.NotMatchException;
 import frontend.lexer.Lexer;
 import frontend.parser.Parser;
 import frontend.visitor.Visitor;

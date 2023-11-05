@@ -1,7 +1,6 @@
 package frontend.parser;
 
-import Util.Assert;
-import Util.Judge;
+import util.Judge;
 import frontend.lexer.Token;
 
 import java.util.ArrayList;

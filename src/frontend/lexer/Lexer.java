@@ -1,6 +1,6 @@
 package frontend.lexer;
 
-import Util.ErrorLog;
+import util.ErrorLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;

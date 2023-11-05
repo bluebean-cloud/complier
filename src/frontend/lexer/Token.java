@@ -1,6 +1,6 @@
 package frontend.lexer;
 
-import Util.DebugConfig;
+import util.DebugConfig;
 
 public class Token {
     public String type;

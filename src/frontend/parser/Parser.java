@@ -1,9 +1,9 @@
 package frontend.parser;
 
-import Util.Assert;
-import Util.ErrorLog;
-import Util.Judge;
-import Util.NotMatchException;
+import util.Assert;
+import util.ErrorLog;
+import util.Judge;
+import util.NotMatchException;
 import frontend.lexer.Lexer;
 import frontend.lexer.Token;
 
