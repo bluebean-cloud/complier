@@ -1,16 +1,10 @@
+import lexer.Lexer;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import pCode.Memory;
-import util.DebugConfig;
-import util.ErrorLog;
-import util.NotMatchException;
-import frontend.lexer.Lexer;
-import frontend.parser.Parser;
-import frontend.visitor.Visitor;
 
 
 public class Compiler {
@@ -18,21 +12,9 @@ public class Compiler {
         try (PrintWriter output = new PrintWriter("output.txt")) {
             String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
             Lexer.LEXER.run(content);
-            Parser.PARSER.run();
+            output.print(Lexer.LEXER.printThis());
 
-            // output.print(Parser.PARSER.root);
-            Visitor.VISITOR.run();
-            if (!ErrorLog.ERRORLIST.isEmpty() && DebugConfig.ERROR) {
-                try (PrintWriter errPut = new PrintWriter("error.txt")) {
-                    ErrorLog.ERRORLIST.sort(ErrorLog::compareTo);
-                    for (ErrorLog errorLog : ErrorLog.ERRORLIST) {
-                        errPut.println(errorLog.toString());
-                    }
-                }
-                return;
-            }
-            output.println(Parser.PARSER.root);
-        } catch (IOException | NotMatchException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
