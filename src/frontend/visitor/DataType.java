@@ -14,6 +14,20 @@ public class DataType {
 
     ArrayList<Integer> values = new ArrayList<>();  // 最顶层的DataType持有值
 
+    public int getSize() {
+        if (content != null) {
+            return capacity * content.getSize();
+        }
+        return 1;
+    }
+
+    public int getDeep() {
+        if (content == null) {
+            return 0;
+        }
+        return content.getDeep() + 1;
+    }
+
     public void padding() { // 数组常量填充
         if (type.equals(Type.INT)) {
             return;

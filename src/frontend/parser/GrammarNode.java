@@ -68,6 +68,14 @@ public class GrammarNode {
         return tokens.get(0).value;
     }
 
+    public String getLValString() {
+        String lVal = getFirstTokenValue();
+        for (int i = 1; i < childs.size(); i++) {
+            lVal += childs.get(i).getFirstTokenValue();
+        }
+        return lVal;
+    }
+
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();

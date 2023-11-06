@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import pCode.Memory;
 import util.DebugConfig;
 import util.ErrorLog;
 import util.NotMatchException;

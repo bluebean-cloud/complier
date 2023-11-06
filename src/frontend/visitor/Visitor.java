@@ -1,5 +1,7 @@
 package frontend.visitor;
 
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
+import pCode.Instr;
 import util.Assert;
 import util.ErrorLog;
 import util.Judge;
@@ -9,10 +11,13 @@ import frontend.parser.Parser;
 import frontend.parser.Type;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Visitor {
     public static Visitor VISITOR = new Visitor();
     private Visitor() {}
+    public ArrayList<Instr> instrs = new ArrayList<>();
 
     SymTable curTable = SymTable.SYMTABLE;
     Function curFunc;   // 在定义函数的过程中通过 curFunc 来访问当前函数
@@ -87,6 +92,7 @@ public class Visitor {
     private Symbol visitConstDef(GrammarNode node) throws NotMatchException {
         Assert.isOf(node.grammarType, "ConstDef");
         Symbol symbol = new Symbol();
+        symbol.setLevel(curTable.level);
         symbol.setConst(true);
         symbol.setType(Type.CONSTVAR);
         symbol.setName(node.getTokenValue());
@@ -235,6 +241,10 @@ public class Visitor {
         isDecl = true;
         node.nextChild();   // 通过 BType
         Symbol symbol = visitVarDef(node.getChild());
+
+        symbol.offset = curTable.size;
+        curTable.size += symbol.dataType.getSize(); // 设置偏移
+
         if (checkReDefine(symbol.name)) {
             ErrorLog.ERRORLIST.add(new ErrorLog(node.getTokenLine(), 'b'));
         } else {
@@ -256,6 +266,7 @@ public class Visitor {
 
     private Symbol visitVarDef(GrammarNode node) throws NotMatchException {
         Symbol symbol = new Symbol();
+        symbol.setLevel(curTable.level);
         symbol.setType(Type.VAR);
         symbol.setName(node.getTokenValue());
         node.nextChild();   // 通过变量名
@@ -401,7 +412,7 @@ public class Visitor {
 
     private void visitBlock(GrammarNode node, boolean sym) throws NotMatchException {
         Assert.isOf(node.grammarType, "Block");
-        if (sym) {
+        if (sym) {  // 若分析函数体则不新建符号表，因为已经在函数头建立过了
             curTable = new SymTable(curTable);
         }
         node.nextChild();   // 通过 '{'
@@ -638,9 +649,10 @@ public class Visitor {
         visitMulExp(node.getChild());
         node.nextChild();
         while (node.hasNextChild()) {
-            // 应该对运算符号做一些处理，先不管了（
+            Instr.Opcode opcode = node.getTokenValue().equals("+") ? Instr.Opcode.Add : Instr.Opcode.Sub;
             node.nextChild();   // 通过 '+', '-'
             visitMulExp(node.getChild());   // BNF
+            instrs.add(new Instr(Instr.Type.OPR, opcode));
             node.nextChild();
         }
     }
@@ -650,8 +662,11 @@ public class Visitor {
         visitUnaryExp(node.getChild());
         node.nextChild();
         while (node.hasNextChild()) {
+            Instr.Opcode opcode = node.getTokenValue().equals("*") ? Instr.Opcode.Mul :
+                    node.getTokenValue().equals("/") ? Instr.Opcode.Div : Instr.Opcode.Mod;
             node.nextChild();   // 通过 '*' '/'
             visitUnaryExp(node.getChild());
+            instrs.add(new Instr(Instr.Type.OPR, opcode));
             node.nextChild();
         }
     }
@@ -660,11 +675,18 @@ public class Visitor {
         Assert.isOf(node.grammarType, "UnaryExp");
         String funcName;
         char type = 'z';
+        int sign;
+        Instr.Opcode opcode;
         boolean isErr = false;
         switch (node.type) {
             case OP_EXP:
+                sign = node.getTokenValue().equals("+") ? 1 : -1;
                 node.nextChild();   // 符号
                 visitUnaryExp(node.getChild());
+                if (sign == -1) {   // 变换符号
+                    instrs.add(new Instr(Instr.Type.LIT, -1));
+                    instrs.add(new Instr(Instr.Type.OPR, Instr.Opcode.Mul));
+                }
                 break;
             case FUNC_CALL:
                 if (findSym(node.getTokenValue()) == null) {
@@ -696,21 +718,24 @@ public class Visitor {
 
     private void visitPrimaryExp(GrammarNode node) throws NotMatchException {
         Assert.isOf(node.grammarType, "PrimaryExp");
+        Symbol symbol;
         switch (node.type) {
             case WITH_BRACKET:  // '(' Exp ')'
                 node.nextChild();   // 通过 '('
                 visitExp(node.getChild());
                 break;
             case IDENFR:
-                visitLVal(node.getChild());
+                symbol = visitLVal(node.getChild());
+                instrs.add(new Instr(Instr.Type.LOD, symbol.level - curTable.level, symbol.offset));
                 break;
-            case INTCON:    // 错误处理不做处理
+            case INTCON:    // 获取常数值
+                instrs.add(new Instr(Instr.Type.LIT, Integer.parseInt(node.getTokenValue())));
                 break;
 
         }
     }
 
-    private void visitLVal(GrammarNode node) throws NotMatchException {
+    private Symbol visitLVal(GrammarNode node) throws NotMatchException {
         Assert.isOf(node.grammarType, "LVal");
         // 检查名字是否存在于符号表中
         if (!checkLValIsSymbol(node.getFirstTokenValue())) { // c 类错误
@@ -718,6 +743,18 @@ public class Visitor {
                     node.getFirstTokenLine(),
                     'c'
             ));
+        }
+        Symbol symbol = findSym(node.getTokenValue());
+        Symbol newSymbol = new Symbol();
+        newSymbol.level = symbol.level;
+        newSymbol.offset = symbol.offset;
+
+        String lVal = node.getLValString();
+        if (symbol.dataType.type.equals(Type.INT)) {    // 如果 LVal 是非数组变量
+            return newSymbol;
+        } else {
+            
+            return newSymbol;
         }
     }
 
