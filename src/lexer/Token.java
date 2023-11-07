@@ -3,8 +3,8 @@ package lexer;
 import util.GlobalConfigure;
 
 public class Token {
-    TokenType tokenType;
-    String content;      // 字面量
+    public TokenType tokenType;
+    public String content;      // 字面量
     int number;          // 常数值
     int line;           // 行号
 
@@ -28,4 +28,9 @@ public class Token {
         }
         return tokenType + " " + content;
     }
+
+    public static String getTokenString(String content) {
+        return Lexer.LEXER.TYPE_MAP.get(content) + " " + content;
+    }
+
 }

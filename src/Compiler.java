@@ -1,4 +1,5 @@
 import lexer.Lexer;
+import parser.Parser;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,8 +13,9 @@ public class Compiler {
         try (PrintWriter output = new PrintWriter("output.txt")) {
             String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
             Lexer.LEXER.run(content);
-            output.print(Lexer.LEXER.printThis());
-
+            // output.print(Lexer.LEXER.printThis());
+            Parser.PARSER.run();
+            output.print(Parser.PARSER.root.printSyntaxTree());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

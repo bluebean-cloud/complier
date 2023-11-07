@@ -45,7 +45,8 @@ public class Lexer {
         TYPE_MAP.put("}", TokenType.RBRACE);
     }
 
-    private final HashMap<String, TokenType> TYPE_MAP = new HashMap<>();
+    public final HashMap<String, TokenType> TYPE_MAP = new HashMap<>();
+
 
     int pos = 0;    // 当前处于字符串的位置
     int line = 1;
@@ -206,6 +207,54 @@ public class Lexer {
 
     private boolean isSpace(char ch) {
         return ch == '\r' || ch == '\n' || ch == ' ' || ch == '\t';
+    }
+
+    public boolean isEnd() {
+        return cnt >= tokens.size();
+    }
+
+    public void next() {
+        cnt++;
+    }
+
+    public void next(String content) throws RuntimeException {
+        if (!content.equals(curContent())) {
+            throw new RuntimeException(String.format("line%d: except '%s', gets '%s'",
+                    tokens.get(cnt).line, content, curContent()));
+        }
+        cnt++;
+    }
+
+    public Token peek() {
+        return tokens.get(cnt);
+    }
+
+    public String curContent() {
+        return tokens.get(cnt).content;
+    }
+
+    public boolean containGetInt() {
+        for (int i = cnt; i < tokens.size(); i++) {
+            if (tokens.get(i).content.equals("=")) {
+                return tokens.get(i + 1).content.equals("getint");
+            }
+            if (tokens.get(i).content.equals(";")) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public boolean containAssign() {
+        for (int i = cnt; i < tokens.size(); i++) {
+            if (tokens.get(i).content.equals("=")) {
+                return true;
+            }
+            if (tokens.get(i).content.equals(";")) {
+                return false;
+            }
+        }
+        return false;
     }
 
 }
