@@ -105,4 +105,39 @@ public class Stmt implements SyntaxTreeNode {
         stringBuilder.append("<Stmt>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        Stmt stmt = new Stmt();
+        stmt.type = type;
+        if (lVal != null) {
+            stmt.lVal = (LVal) lVal.clone();
+        }
+        if (exp != null) {
+            stmt.exp = (Exp) exp.clone();
+        }
+        if (block != null) {
+            stmt.block = (Block) block.clone();
+        }
+        if (cond != null) {
+            stmt.cond = (Cond) cond.clone();
+        }
+        if (stmt1 != null) {
+            stmt.stmt1 = (Stmt) stmt1.clone();
+        }
+        if (stmt2 != null) {
+            stmt.stmt2 = (Stmt) stmt2.clone();
+        }
+        if (forStmt1 != null) {
+            stmt.forStmt1 = (ForStmt) forStmt1.clone();
+        }
+        if (forStmt2 != null) {
+            stmt.forStmt2 = (ForStmt) forStmt2.clone();
+        }
+        if (formatString != null) {
+            stmt.formatString = formatString;
+        }
+        exps.forEach(exp1 -> stmt.exps.add((Exp) exp1.clone()));
+        return stmt;
+    }
 }

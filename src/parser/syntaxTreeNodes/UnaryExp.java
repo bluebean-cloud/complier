@@ -2,8 +2,6 @@ package parser.syntaxTreeNodes;
 
 import lexer.Token;
 
-import java.util.ArrayList;
-
 public class UnaryExp implements SyntaxTreeNode {
     public SyntaxType type;
     public PrimaryExp primaryExp;
@@ -33,5 +31,27 @@ public class UnaryExp implements SyntaxTreeNode {
         }
         stringBuilder.append("<UnaryExp>");
         return stringBuilder.toString();
+    }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        UnaryExp unaryExp = new UnaryExp();
+        unaryExp.type = type;
+        if (primaryExp != null) {
+            unaryExp.primaryExp = (PrimaryExp) primaryExp.clone();
+        }
+        if (ident != null) {
+            unaryExp.ident = ident;
+        }
+        if (funcRParams != null) {
+            unaryExp.funcRParams = (FuncRParams) funcRParams.clone();
+        }
+        if (unaryOp != null) {
+            unaryExp.unaryOp = (UnaryOp) unaryOp.clone();
+        }
+        if (this.unaryExp != null) {
+            unaryExp.unaryExp = (UnaryExp) this.unaryExp.clone();
+        }
+        return unaryExp;
     }
 }

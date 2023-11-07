@@ -18,4 +18,11 @@ public class Block implements SyntaxTreeNode{
                 .append("<Block>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        Block block = new Block();
+        items.forEach(item -> block.items.add((BlockItem) item.clone()));
+        return block;
+    }
 }

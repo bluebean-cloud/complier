@@ -5,8 +5,8 @@ import util.GlobalConfigure;
 public class Token {
     public TokenType tokenType;
     public String content;      // 字面量
-    int number;          // 常数值
-    int line;           // 行号
+    public int number;          // 常数值
+    public int line;           // 行号
 
     public Token(TokenType tokenType, String content, int line) {
         this.tokenType = tokenType;

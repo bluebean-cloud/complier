@@ -14,4 +14,16 @@ public class BlockItem implements SyntaxTreeNode {
         }
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        BlockItem blockItem = new BlockItem();
+        blockItem.type = type;
+        if (decl != null) {
+            blockItem.decl = (Decl) decl.clone();
+        } else {
+            blockItem.stmt = (Stmt) stmt.clone();
+        }
+        return blockItem;
+    }
 }

@@ -9,4 +9,15 @@ public class UnaryOp implements SyntaxTreeNode {
         return op.toString() + '\n' +
                 "<UnaryOp>";
     }
+
+    public UnaryOp() {}
+
+    public UnaryOp(Token op) {
+        this.op = op;
+    }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        return new UnaryOp(op);
+    }
 }

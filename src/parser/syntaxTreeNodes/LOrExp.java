@@ -20,4 +20,12 @@ public class LOrExp implements SyntaxTreeNode {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        LOrExp lOrExp = new LOrExp();
+        andExps.forEach(lAndExp -> lOrExp.andExps.add((LAndExp) lAndExp.clone()));
+        return lOrExp;
+    }
+
 }

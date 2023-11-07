@@ -21,4 +21,12 @@ public class EqExp implements SyntaxTreeNode {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        EqExp eqExp = new EqExp();
+        relExps.forEach(relExp -> eqExp.relExps.add((RelExp) relExp.clone()));
+        eqExp.ops.addAll(ops);
+        return eqExp;
+    }
 }

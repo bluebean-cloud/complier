@@ -233,6 +233,10 @@ public class Lexer {
         return tokens.get(cnt).content;
     }
 
+    public int curLine() {
+        return tokens.get(cnt).line;
+    }
+
     public boolean containGetInt() {
         for (int i = cnt; i < tokens.size(); i++) {
             if (tokens.get(i).content.equals("=")) {
@@ -255,6 +259,10 @@ public class Lexer {
             }
         }
         return false;
+    }
+
+    public boolean isNewLine() {
+        return LEXER.peek().line != LEXER.preView(-1).line;
     }
 
 }

@@ -12,4 +12,13 @@ public class ForStmt implements SyntaxTreeNode {
                 exp.printSyntaxTree() + '\n' +
                 "<ForStmt>";
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        ForStmt forStmt = new ForStmt();
+        forStmt.lVal = (LVal) lVal.clone();
+        forStmt.exp = (Exp) exp.clone();
+        return forStmt;
+    }
+
 }

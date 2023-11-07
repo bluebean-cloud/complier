@@ -10,4 +10,12 @@ public class FuncType implements SyntaxTreeNode{
         return type.toString() + '\n'
                 + "<FuncType>";
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        FuncType funcType = new FuncType();
+        funcType.type = type;
+        return funcType;
+    }
+
 }

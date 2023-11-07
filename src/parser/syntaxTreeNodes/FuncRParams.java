@@ -17,4 +17,12 @@ public class FuncRParams implements SyntaxTreeNode {
         stringBuilder.append("<FuncRParams>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        FuncRParams funcRParams = new FuncRParams();
+        exps.forEach(exp -> funcRParams.exps.add((Exp) exp.clone()));
+        return funcRParams;
+    }
+
 }

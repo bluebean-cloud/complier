@@ -2,8 +2,10 @@ package parser;
 
 import lexer.Lexer;
 import lexer.TokenType;
-import parser.syntaxTreeNodes.*;
 import parser.syntaxTreeNodes.Number;
+import parser.syntaxTreeNodes.*;
+import util.ErrorLog;
+import util.GlobalConfigure;
 import util.Judge;
 
 public class Parser {
@@ -51,7 +53,13 @@ public class Parser {
             Lexer.LEXER.next(",");
             constDecl.constDefs.add(parseConstDef());
         }
-        Lexer.LEXER.next(";");
+        try {
+            Lexer.LEXER.next(";");
+        } catch (RuntimeException e) {
+            if (GlobalConfigure.ERROR) {
+                ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+            }
+        }
         return constDecl;
     }
 
@@ -100,7 +108,13 @@ public class Parser {
             Lexer.LEXER.next(",");
             varDecl.varDefs.add(parseVarDef());
         }
-        Lexer.LEXER.next(";");
+        try {
+            Lexer.LEXER.next(";");
+        } catch (RuntimeException e) {
+            if (GlobalConfigure.ERROR) {
+                ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+            }
+        }
         return varDecl;
     }
 
@@ -169,7 +183,7 @@ public class Parser {
 
     private FuncType parseFuncType() {
         FuncType funcType = new FuncType();
-        funcType.type = Lexer.LEXER.peek();;
+        funcType.type = Lexer.LEXER.peek();
         Lexer.LEXER.next();
         return funcType;
     }
@@ -267,22 +281,40 @@ public class Parser {
         if (Judge.isOf(Lexer.LEXER.curContent(), "break")) {
             stmt.type = SyntaxType.Break;
             Lexer.LEXER.next("break");
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         }
         if (Judge.isOf(Lexer.LEXER.curContent(), "continue")) {
             stmt.type = SyntaxType.Continue;
             Lexer.LEXER.next("continue");
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         }
         if (Judge.isOf(Lexer.LEXER.curContent(), "return")) {
             stmt.type = SyntaxType.Return;
             Lexer.LEXER.next("return");
-            if (!Judge.isOf(Lexer.LEXER.curContent(), ";")) {
+            if (!Judge.isOf(Lexer.LEXER.curContent(), ";") && !Lexer.LEXER.isNewLine()) {
                 stmt.exp = parseExp();
             }
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         }
         if (Judge.isOf(Lexer.LEXER.curContent(), "printf")) {
@@ -296,7 +328,13 @@ public class Parser {
                 stmt.exps.add(parseExp());
             }
             Lexer.LEXER.next(")");
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         }
         if (Lexer.LEXER.containGetInt()) {
@@ -306,7 +344,13 @@ public class Parser {
             Lexer.LEXER.next("getint");
             Lexer.LEXER.next("(");
             Lexer.LEXER.next(")");
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         }
         if (Lexer.LEXER.containAssign()) {
@@ -314,7 +358,13 @@ public class Parser {
             stmt.lVal = parseLVal();
             Lexer.LEXER.next("=");
             stmt.exp = parseExp();
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         } else {
             stmt.type = SyntaxType.Empty;
@@ -322,7 +372,13 @@ public class Parser {
                 stmt.type = SyntaxType.Exp;
                 stmt.exp = parseExp();
             }
-            Lexer.LEXER.next(";");
+            try {
+                Lexer.LEXER.next(";");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                }
+            }
             return stmt;
         }
     }

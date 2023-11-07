@@ -23,4 +23,18 @@ public class LVal implements SyntaxTreeNode{
         stringBuilder.append("<LVal>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        LVal lVal = new LVal();
+        lVal.ident = ident;
+        if (exp1 != null) {
+            lVal.exp1 = (Exp) exp1.clone();
+        }
+        if (exp2 != null) {
+            lVal.exp2 = (Exp) exp2.clone();
+        }
+        return lVal;
+    }
+
 }

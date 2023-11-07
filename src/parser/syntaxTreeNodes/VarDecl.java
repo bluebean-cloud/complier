@@ -20,4 +20,12 @@ public class VarDecl implements SyntaxTreeNode {
                 .append("<VarDecl>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        VarDecl varDecl = new VarDecl();
+        varDefs.forEach(varDef -> varDecl.varDefs.add((VarDef) varDef.clone()));
+        return varDecl;
+    }
+
 }

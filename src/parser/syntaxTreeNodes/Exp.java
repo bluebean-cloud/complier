@@ -7,4 +7,12 @@ public class Exp implements SyntaxTreeNode{
         return addExp.printSyntaxTree() + '\n' +
                 "<Exp>";
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        Exp exp = new Exp();
+        exp.addExp = (AddExp) addExp.clone();
+        return exp;
+    }
+
 }

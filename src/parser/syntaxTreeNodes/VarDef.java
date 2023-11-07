@@ -2,8 +2,6 @@ package parser.syntaxTreeNodes;
 
 import lexer.Token;
 
-import java.util.ArrayList;
-
 public class VarDef implements SyntaxTreeNode{
     public Token ident;
     public ConstExp constExp1;
@@ -30,6 +28,22 @@ public class VarDef implements SyntaxTreeNode{
         }
         stringBuilder.append("<VarDef>");
         return stringBuilder.toString();
+    }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        VarDef varDef = new VarDef();
+        varDef.ident = ident;
+        if (constExp1 != null) {
+            varDef.constExp1 = (ConstExp) constExp1.clone();
+        }
+        if (constExp2 != null) {
+            varDef.constExp2 = (ConstExp) constExp2.clone();
+        }
+        if (initVal != null) {
+            varDef.initVal = (InitVal) initVal.clone();
+        }
+        return initVal;
     }
 
 }

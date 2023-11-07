@@ -14,4 +14,17 @@ public class Decl implements SyntaxTreeNode {
         }
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        Decl decl = new Decl();
+        if (constDecl != null) {
+            decl.constDecl = (ConstDecl) constDecl.clone();
+        } else {
+            decl.varDecl = (VarDecl) varDecl.clone();
+        }
+        return decl;
+    }
+
+
 }

@@ -18,4 +18,12 @@ public class FuncFParams implements SyntaxTreeNode{
         stringBuilder.append("<FuncFParams>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        FuncFParams params = new FuncFParams();
+        funcFParams.forEach(funcFParam -> params.funcFParams.add((FuncFParam) funcFParam.clone()));
+        return params;
+    }
+
 }

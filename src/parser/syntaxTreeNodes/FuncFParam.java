@@ -25,4 +25,15 @@ public class FuncFParam  implements SyntaxTreeNode {
         return stringBuilder.toString();
     }
 
+    @Override
+    public SyntaxTreeNode clone() {
+        FuncFParam funcFParam = new FuncFParam();
+        funcFParam.deep = deep;
+        funcFParam.ident = ident;
+        if (constExp != null) {
+            funcFParam.constExp = (ConstExp) constExp.clone();
+        }
+        return funcFParam;
+    }
+
 }

@@ -27,4 +27,15 @@ public class ConstInitVal implements SyntaxTreeNode {
         stringBuilder.append("<ConstInitVal>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        ConstInitVal constInitVal = new ConstInitVal();
+        if (constExp != null) {
+            constInitVal.constExp = (ConstExp) constExp.clone();
+        }
+        constInitVals.forEach(constInitV -> constInitVal.constInitVals.add((ConstInitVal) constInitV.clone()));
+        return constInitVal;
+    }
+
 }

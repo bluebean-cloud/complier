@@ -20,4 +20,13 @@ public class MulExp implements SyntaxTreeNode {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        MulExp mulExp = new MulExp();
+        unaryExps.forEach(unaryExp -> mulExp.unaryExps.add((UnaryExp) unaryExp.clone()));
+        mulExp.ops.addAll(ops);
+        return mulExp;
+    }
+
 }

@@ -23,4 +23,15 @@ public class CompUnit implements SyntaxTreeNode {
         return stringBuilder.toString();
     }
 
+    @Override
+    public SyntaxTreeNode clone() {
+        CompUnit compUnit = new CompUnit();
+        if (mainFuncDef != null) {
+            compUnit.mainFuncDef = (MainFuncDef) mainFuncDef.clone();
+        }
+        decls.forEach(decl -> compUnit.decls.add((Decl) decl.clone()));
+        funcDefs.forEach(funcDef -> compUnit.funcDefs.add((FuncDef) funcDef.clone()));
+        return compUnit;
+    }
+
 }

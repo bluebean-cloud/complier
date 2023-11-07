@@ -13,4 +13,12 @@ public class MainFuncDef implements SyntaxTreeNode {
                 block.printSyntaxTree() + '\n' +
                 "<MainFuncDef>";
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        MainFuncDef mainFuncDef = new MainFuncDef();
+        mainFuncDef.block = (Block) block.clone();
+        return mainFuncDef;
+    }
+
 }

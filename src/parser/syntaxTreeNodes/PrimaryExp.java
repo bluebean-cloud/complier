@@ -26,4 +26,20 @@ public class PrimaryExp implements SyntaxTreeNode{
         stringBuilder.append("<PrimaryExp>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        PrimaryExp primaryExp = new PrimaryExp();
+        primaryExp.type = type;
+        if (exp != null) {
+            primaryExp.exp = (Exp) exp.clone();
+        }
+        if (lVal != null) {
+            primaryExp.lVal = (LVal) lVal.clone();
+        }
+        if (number != null) {
+            primaryExp.number = (Number) number.clone();
+        }
+        return primaryExp;
+    }
 }

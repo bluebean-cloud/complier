@@ -7,7 +7,6 @@ import java.util.ArrayList;
 public class ConstDecl implements SyntaxTreeNode {
     public ArrayList<ConstDef> constDefs = new ArrayList<>();
 
-
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -21,5 +20,12 @@ public class ConstDecl implements SyntaxTreeNode {
         stringBuilder.append(Token.getTokenString(";")).append('\n')
                 .append("<ConstDecl>");
         return stringBuilder.toString();
+    }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        ConstDecl constDecl = new ConstDecl();
+        constDefs.forEach(constDef -> constDecl.constDefs.add((ConstDef) constDef.clone()));
+        return constDecl;
     }
 }

@@ -7,4 +7,11 @@ public class Cond implements SyntaxTreeNode {
         return lOrExp.printSyntaxTree() + '\n' +
                 "<Cond>";
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        Cond cond = new Cond();
+        cond.lOrExp = (LOrExp) lOrExp.clone();
+        return cond;
+    }
 }

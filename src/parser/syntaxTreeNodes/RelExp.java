@@ -20,4 +20,12 @@ public class RelExp implements SyntaxTreeNode {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        RelExp relExp = new RelExp();
+        addExps.forEach(addExp -> relExp.addExps.add((AddExp) addExp.clone()));
+        relExp.ops.addAll(ops);
+        return relExp;
+    }
 }

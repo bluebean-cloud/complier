@@ -27,4 +27,16 @@ public class InitVal implements SyntaxTreeNode {
         stringBuilder.append("<InitVal>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        InitVal initVal = new InitVal();
+        if (exp != null) {
+            initVal.exp = (Exp) exp.clone();
+        } else {
+            initVals.forEach(initV -> initVal.initVals.add((InitVal) initV.clone()));
+        }
+        return initVal;
+    }
+
 }

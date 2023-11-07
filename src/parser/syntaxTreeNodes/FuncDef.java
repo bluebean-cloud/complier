@@ -2,8 +2,6 @@ package parser.syntaxTreeNodes;
 
 import lexer.Token;
 
-import java.util.ArrayList;
-
 public class FuncDef implements SyntaxTreeNode {
     public FuncType funcType;
     public Token ident;
@@ -24,4 +22,17 @@ public class FuncDef implements SyntaxTreeNode {
                 .append("<FuncDef>");
         return stringBuilder.toString();
     }
+
+    @Override
+    public SyntaxTreeNode clone() {
+        FuncDef funcDef = new FuncDef();
+        funcDef.funcType = funcType;
+        funcDef.ident = ident;
+        if (funcFParams != null) {
+            funcDef.funcFParams = (FuncFParams) funcFParams.clone();
+        }
+        funcDef.block = (Block) block.clone();
+        return funcDef;
+    }
+
 }
