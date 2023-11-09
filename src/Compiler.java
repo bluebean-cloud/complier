@@ -1,3 +1,4 @@
+import executor.Executor;
 import lexer.Lexer;
 import parser.Parser;
 import util.ErrorLog;
@@ -25,6 +26,7 @@ public class Compiler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        Executor.EXECUTOR.run();
     }
 
 }

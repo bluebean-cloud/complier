@@ -6,6 +6,11 @@ public class LVal implements SyntaxTreeNode{
     public Token ident;
     public Exp exp1;
     public Exp exp2;
+
+    public String getName() {
+        return ident.content;
+    }
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

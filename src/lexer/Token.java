@@ -43,4 +43,17 @@ public class Token {
         return Lexer.LEXER.TYPE_MAP.get(content) + " " + content;
     }
 
+    @Override
+    public int hashCode() {
+        return content.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Token)) {
+            return false;
+        }
+        return this.content.equals(((Token) obj).content);
+    }
+
 }

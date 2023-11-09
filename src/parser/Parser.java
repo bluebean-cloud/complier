@@ -9,6 +9,7 @@ import util.GlobalConfigure;
 import util.Judge;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Parser {
     public static final Parser PARSER = new Parser();
@@ -21,9 +22,9 @@ public class Parser {
 
     boolean inLoop = false;
     boolean funcBlock = false;
-    ArrayList<FuncDef> funcDefs = new ArrayList<>();
+    HashMap<String, FuncDef> funcDefs = new HashMap<>();
     FuncDef curFunc;
-    Scope curScope = new Scope();
+    public Scope curScope = new Scope();
 
 
     private CompUnit parseCompUnit() {
@@ -213,7 +214,7 @@ public class Parser {
             }
         }
         if (check) {
-            funcDefs.add(funcDef);
+            funcDefs.put(funcDef.getFuncName(), funcDef);
         }
         funcDef.block = parseBlock(true);
         funcDef.checkReturn(Lexer.LEXER.preView(-1).line);
@@ -711,15 +712,13 @@ public class Parser {
     }
 
     private boolean checkRide(String name, int line) {
-        if (!GlobalConfigure.ERROR) {
+        if (!GlobalConfigure.ERROR) {   // 判断重定义
             return true;
         }
         if (curScope.parent == null) {
-            for (FuncDef funcDef: funcDefs) {
-                if (name.equals(funcDef.getFuncName())) {
-                    ErrorLog.ERROR_LOGS.addErrorLog(line, "b");
-                    return false;
-                }
+            if (funcDefs.containsKey(name)) {
+                ErrorLog.ERROR_LOGS.addErrorLog(line, "b");
+                return false;
             }
         }
         for (ConstDef constDef: curScope.constDefs) {
@@ -755,10 +754,8 @@ public class Parser {
             }
             temScope = temScope.parent;
         }
-        for (FuncDef funcDef: funcDefs) {
-            if (name.equals(funcDef.getFuncName())) {
-                return;
-            }
+        if (funcDefs.containsKey(name)) {
+            return;
         }
         ErrorLog.ERROR_LOGS.addErrorLog(line, "c");
     }
@@ -797,11 +794,9 @@ public class Parser {
         }
     }
 
-    private FuncDef findFuncDef(String name) {
-        for (FuncDef func: funcDefs) {
-            if (func.getFuncName().equals(name)) {
-                return func;
-            }
+    public FuncDef findFuncDef(String name) {
+        if (funcDefs.containsKey(name)) {
+            return funcDefs.get(name);
         }
         return null;
     }

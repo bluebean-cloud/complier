@@ -7,6 +7,10 @@ public class FuncFParam  implements SyntaxTreeNode {
     public Token ident;
     public ConstExp constExp;
 
+    public String getName() {
+        return ident.content;
+    }
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();
