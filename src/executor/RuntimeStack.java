@@ -30,6 +30,8 @@ public class RuntimeStack {
             Var var = new Var(RuntimeType.SIMPLE_VAR);
             if (varDef.initVal != null) {
                 var.value = Executor.EXECUTOR.interpretExp(varDef.initVal.exp);
+            } else {
+                var.value = 0;
             }
             varHashMap.put(varDef.ident.content, var);
         } else {    // 数组

@@ -3,10 +3,13 @@ package executor;
 import lexer.TokenType;
 import parser.Parser;
 import parser.syntaxTreeNodes.*;
+import util.GlobalConfigure;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Executor {
@@ -17,16 +20,25 @@ public class Executor {
     RuntimeStack curStack = globalHeap;
     Scanner scanner;
     StringBuilder stringBuilder = new StringBuilder();
+    Random random = new Random();
 
     public void run() {
-        scanner = new Scanner(System.in);
-        CompUnit root = Parser.PARSER.root;
-        for (VarDef varDef: Parser.PARSER.curScope.varDefs) {
-            curStack.addVar(varDef);
+        if (GlobalConfigure.DEBUG) {
+            try {
+                scanner = new Scanner(new File("inputfile.txt"));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            scanner = new Scanner(System.in);
         }
+        CompUnit root = Parser.PARSER.root;
         for (ConstDef constDef: Parser.PARSER.curScope.constDefs) {
             curStack.addVar(constDef);
         }   // 添加全局变量
+        for (VarDef varDef: Parser.PARSER.curScope.varDefs) {
+            curStack.addVar(varDef);
+        }
         int mainValue = interpretMainFunc(root.mainFuncDef);
         try (PrintWriter output = new PrintWriter("pcoderesult.txt")) {
             output.print(stringBuilder.toString());
@@ -54,8 +66,9 @@ public class Executor {
             }
         } catch (ReturnException value) {
             returnValue = value.value;
+        } finally {
+            curStack = curStack.parent;
         }
-        curStack = curStack.parent;
         return returnValue;
     }
 
@@ -77,6 +90,8 @@ public class Executor {
             var = new Var(RuntimeType.SIMPLE_VAR);
             if (varDef.initVal != null) {
                 var.value = interpretExp(varDef.initVal.exp);
+            } else {
+                var.value = random.nextInt();
             }
         } else {    // 数组
             var = new Var(RuntimeType.ARRAY);
@@ -192,14 +207,23 @@ public class Executor {
         while (unaryExp.type.equals(SyntaxType.UnaryOp)) {
             if (unaryExp.unaryOp.op.tokenType.equals(TokenType.MINU)) {
                 sign *= -1;
+            } else if (unaryExp.unaryOp.op.tokenType.equals(TokenType.NOT)) {
+                sign = 0;
             }
             unaryExp = unaryExp.unaryExp;
         }
         switch (unaryExp.type) {
             case PrimaryExp:
-                return sign * interpretPrimaryExp(unaryExp.primaryExp);
+                int value = interpretPrimaryExp(unaryExp.primaryExp);
+                if (sign == 0) {
+                    return value == 0 ? 1 : 0;  // 取反
+                }
+                return sign * value;
             case FuncCall:
-                return sign * callFunc(unaryExp.ident.content, unaryExp.funcRParams);
+                RuntimeStack temStack = curStack;   // 保存运行栈
+                int returnValue = sign * callFunc(unaryExp.ident.content, unaryExp.funcRParams);
+                curStack = temStack;
+                return  returnValue;
         }
         return 0;
     }
@@ -219,6 +243,9 @@ public class Executor {
     private int interpretLVal(LVal lVal) {
         Var var = findVar(lVal.getName());
         if (lVal.exp1 == null) {    // 为变量
+            if (var.value == null) {
+                System.out.println("NULL: " + lVal.getName());
+            }
             return var.value;
         }
         int x = interpretExp(lVal.exp1);
@@ -230,20 +257,21 @@ public class Executor {
     }
 
     public int callFunc(String name, FuncRParams funcRParams) {
-        curStack = new RuntimeStack(curStack);
+        RuntimeStack temStack = new RuntimeStack(curStack);
         FuncDef funcDef = Parser.PARSER.findFuncDef(name);
         FuncFParams funcFParams = funcDef.funcFParams;
         if (funcFParams != null) {
             for (int i = 0; i < funcFParams.funcFParams.size(); i++) {
                 if (funcFParams.funcFParams.get(i).deep == 0) { // 朴素的 int 类型
-                    curStack.addVar(funcFParams.funcFParams.get(i).getName(),
+                    temStack.addVar(funcFParams.funcFParams.get(i).getName(),
                             new Var(RuntimeType.SIMPLE_VAR, interpretExp(funcRParams.exps.get(i))));
                 } else {    // 数组类型
-                    curStack.addVar(funcFParams.funcFParams.get(i).getName(),
+                    temStack.addVar(funcFParams.funcFParams.get(i).getName(),
                             interpretExp(funcRParams.exps.get(i), 0));  // 0 作为占位符
                 }
             }
         }
+        curStack = temStack;
         try {
             for (BlockItem blockItem : funcDef.block.items) {
                 switch (blockItem.type) {
@@ -255,7 +283,7 @@ public class Executor {
                 }
             }
         } catch (ReturnException e) {
-            curStack = curStack.parent;
+            curStack = null;
             return e.value;
         }
         curStack = curStack.parent;
@@ -265,7 +293,9 @@ public class Executor {
     public void interpretStmt(Stmt stmt) {
         switch (stmt.type) {
             case Empty:
+                return;
             case Exp:
+                interpretExp(stmt.exp);
                 return;
             case Block:
                 interpretBlock(stmt);
@@ -304,7 +334,6 @@ public class Executor {
                 i++;
             } else if (string.charAt(i) == '\\' && string.charAt(i + 1) == 'n') {
                 stringBuilder.append('\n');
-                cnt++;
                 i++;
             } else {
                 stringBuilder.append(string.charAt(i));
@@ -338,16 +367,21 @@ public class Executor {
 
     public void interpretBlock(Stmt stmt) {
         curStack = new RuntimeStack(curStack);
-        for (BlockItem blockItem: stmt.block.items) {
-            switch (blockItem.type) {
-                case Decl:
-                    interpretDecl(blockItem.decl);
-                    break;
-                case Stmt:
-                    interpretStmt(blockItem.stmt);
+        try {
+            for (BlockItem blockItem : stmt.block.items) {
+                switch (blockItem.type) {
+                    case Decl:
+                        interpretDecl(blockItem.decl);
+                        break;
+                    case Stmt:
+                        interpretStmt(blockItem.stmt);
+                }
             }
+            curStack = curStack.parent;
+        } catch (ControlFlowException e) {
+            curStack = curStack.parent;
+            throw e;
         }
-        curStack = curStack.parent;
     }
 
     public void interpretAssign(Stmt stmt) {
@@ -386,8 +420,9 @@ public class Executor {
                 interpretStmt(stmt.stmt1);
                 curStack = curStack.parent;
             } catch (ControlFlowException e) {
+                curStack = curStack.parent;
                 if (e.type.equals(ControlFlowException.Type.BREAK)) {
-                    break;
+                    return;
                 }
             }
             if (stmt.forStmt2 != null) {
@@ -459,15 +494,14 @@ public class Executor {
                     cond = cond <= interpretAddExp(relExp.addExps.get(i + 1)) ? 1 : 0;
                     break;
                 case GRE:
-                    cond = cond >= interpretAddExp(relExp.addExps.get(i + 1)) ? 1 : 0;
+                    cond = cond > interpretAddExp(relExp.addExps.get(i + 1)) ? 1 : 0;
                     break;
                 case GEQ:
-                    cond = cond > interpretAddExp(relExp.addExps.get(i + 1)) ? 1 : 0;
+                    cond = cond >= interpretAddExp(relExp.addExps.get(i + 1)) ? 1 : 0;
                     break;
             }
         }
-
-        return cond == 0 ? 0 : 1;
+        return cond;
     }
 
     public int interpretConstExp(ConstExp constExp) {
