@@ -21,6 +21,16 @@ public class Token {
         this.line = line;
     }
 
+    public int getFormatSpecifierNum() {
+        int ans = 0;
+        for (int i = 0; i < content.length() - 1; i++) {
+            if (content.charAt(i) == '%' && content.charAt(i + 1) == 'd') {
+                ans++;
+            }
+        }
+        return ans;
+    }
+
     @Override
     public String toString() {
         if (GlobalConfigure.DEBUG) {

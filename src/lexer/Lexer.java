@@ -1,5 +1,6 @@
 package lexer;
 
+import util.ErrorLog;
 import util.GlobalConfigure;
 
 import java.util.ArrayList;
@@ -55,7 +56,11 @@ public class Lexer {
     ArrayList<Token> tokens = new ArrayList<>();
 
     public void run(String string) {
-        content = string.trim();
+        int endIndex = string.length() - 1;
+        while (endIndex > 0 && isSpace(string.charAt(endIndex))) {
+            endIndex--;
+        }
+        content = string.substring(0, endIndex + 1);
         while (pos < content.length()) {
             addToken();
         }
@@ -170,8 +175,8 @@ public class Lexer {
             pos++;
         }
         builder.append(content.charAt(pos++));
-        if (GlobalConfigure.ERROR && isLegal(builder.toString())) {
-
+        if (GlobalConfigure.ERROR && !isLegal(builder.toString())) {
+            ErrorLog.ERROR_LOGS.addErrorLog(line, "a");
         }
         return new Token(TokenType.STRCON, builder.toString(), line);
     }

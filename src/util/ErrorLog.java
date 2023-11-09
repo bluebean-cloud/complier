@@ -14,6 +14,10 @@ public class ErrorLog {
         logs.add(new Log(line, type));
     }
 
+    public boolean isEmpty() {
+        return logs.isEmpty();
+    }
+
     public void printErrorLogs() {
         logs.sort(Log::compareTo);
         try (PrintWriter output = new PrintWriter("error.txt")) {

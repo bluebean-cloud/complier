@@ -1,5 +1,7 @@
 import lexer.Lexer;
 import parser.Parser;
+import util.ErrorLog;
+import util.GlobalConfigure;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,6 +17,10 @@ public class Compiler {
             Lexer.LEXER.run(content);
             // output.print(Lexer.LEXER.printThis());
             Parser.PARSER.run();
+            if (GlobalConfigure.ERROR && !ErrorLog.ERROR_LOGS.isEmpty()) {
+                ErrorLog.ERROR_LOGS.printErrorLogs();
+                return;
+            }
             output.print(Parser.PARSER.root.printSyntaxTree());
         } catch (IOException e) {
             throw new RuntimeException(e);

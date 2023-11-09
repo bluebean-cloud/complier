@@ -7,6 +7,11 @@ public class ConstDef implements SyntaxTreeNode {
     public ConstExp constExp1;
     public ConstExp constExp2;
     public ConstInitVal constInitVal;
+
+    public String getName() {
+        return ident.content;
+    }
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

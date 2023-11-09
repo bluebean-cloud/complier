@@ -4,6 +4,11 @@ import lexer.Token;
 
 public class MainFuncDef implements SyntaxTreeNode {
     public Block block;
+
+    public void checkReturn(int line) { // 有返回值的函数最后一句必须是return
+        FuncDef.checkReturn(line, block);
+    }
+
     @Override
     public String printSyntaxTree() {
         return Token.getTokenString("int") + '\n' +

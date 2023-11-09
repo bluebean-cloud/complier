@@ -8,6 +8,22 @@ public class VarDef implements SyntaxTreeNode{
     public ConstExp constExp2;
     public InitVal initVal;
 
+    public String getName() {
+        return ident.content;
+    }
+
+    public VarDef() {}
+
+    public VarDef(FuncFParam funcFParam) {
+        if (funcFParam.deep >= 1) {
+            constExp1 = new ConstExp();
+        }
+        if (funcFParam.deep == 2) {
+            constExp2 = new ConstExp();
+        }
+        ident = funcFParam.ident;
+    }
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

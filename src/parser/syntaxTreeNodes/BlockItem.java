@@ -1,7 +1,7 @@
 package parser.syntaxTreeNodes;
 
 public class BlockItem implements SyntaxTreeNode {
-    public SyntaxType type;     // ConstDecl | VarDecl
+    public SyntaxType type;     // Stmt | Decl
     public Decl decl;
     public Stmt stmt;
     @Override
