@@ -286,7 +286,7 @@ public class Executor {
             curStack = null;
             return e.value;
         }
-        curStack = curStack.parent;
+        curStack = null;
         return 0;
     }
 
@@ -416,11 +416,8 @@ public class Executor {
         }
         while (stmt.cond == null || interpretCond(stmt.cond) != 0) {
             try {
-                curStack = new RuntimeStack(curStack);
                 interpretStmt(stmt.stmt1);
-                curStack = curStack.parent;
             } catch (ControlFlowException e) {
-                curStack = curStack.parent;
                 if (e.type.equals(ControlFlowException.Type.BREAK)) {
                     return;
                 }
