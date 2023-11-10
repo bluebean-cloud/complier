@@ -1,6 +1,7 @@
 package parser;
 
 import lexer.Lexer;
+import lexer.Token;
 import lexer.TokenType;
 import parser.syntaxTreeNodes.Number;
 import parser.syntaxTreeNodes.*;
@@ -323,6 +324,7 @@ public class Parser {
 
     private Stmt parseStmt() {
         Stmt stmt = new Stmt();
+        int temCnt = Lexer.LEXER.cnt;
         if (Judge.isOf(Lexer.LEXER.curContent(), "{")) {
             stmt.type = SyntaxType.Block;
             stmt.block = parseBlock(false);
@@ -457,9 +459,26 @@ public class Parser {
         }
         if (Lexer.LEXER.containGetInt()) {
             stmt.type = SyntaxType.GetInt;
-            checkIsConst(Lexer.LEXER.curContent(), Lexer.LEXER.curLine());
+            String name = Lexer.LEXER.curContent();
+            int line = Lexer.LEXER.curLine();
             stmt.lVal = parseLVal();
-            Lexer.LEXER.next("=");
+            try {
+                Lexer.LEXER.next("=");
+            } catch (RuntimeException e) {
+                Lexer.LEXER.cnt = temCnt;
+                stmt.type = SyntaxType.Exp;
+                stmt.lVal = null;
+                stmt.exp = parseExp();
+                try {
+                    Lexer.LEXER.next(";");
+                } catch (RuntimeException e1) {
+                    if (GlobalConfigure.ERROR) {
+                        ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                    }
+                }
+                return stmt;
+            }
+            checkIsConst(name, line);
             Lexer.LEXER.next("getint");
             Lexer.LEXER.next("(");
             try {
@@ -480,9 +499,26 @@ public class Parser {
         }
         if (Lexer.LEXER.containAssign()) {
             stmt.type = SyntaxType.Assign;
-            checkIsConst(Lexer.LEXER.curContent(), Lexer.LEXER.curLine());
+            String name = Lexer.LEXER.curContent();
+            int line = Lexer.LEXER.curLine();
             stmt.lVal = parseLVal();
-            Lexer.LEXER.next("=");
+            try {
+                Lexer.LEXER.next("=");
+            } catch (RuntimeException e) {
+                Lexer.LEXER.cnt = temCnt;
+                stmt.type = SyntaxType.Exp;
+                stmt.lVal = null;
+                stmt.exp = parseExp();
+                try {
+                    Lexer.LEXER.next(";");
+                } catch (RuntimeException e1) {
+                    if (GlobalConfigure.ERROR) {
+                        ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "i");
+                    }
+                }
+                return stmt;
+            }
+            checkIsConst(name, line);
             stmt.exp = parseExp();
             try {
                 Lexer.LEXER.next(";");
@@ -532,7 +568,7 @@ public class Parser {
 
     private LVal parseLVal() {
         LVal lVal = new LVal();
-        checkUndefined(Lexer.LEXER.curContent(), Lexer.LEXER.curLine());
+        checkUndefined(Lexer.LEXER.peek(), Lexer.LEXER.curLine());
         lVal.ident = Lexer.LEXER.peek();
         Lexer.LEXER.next();
         if (Judge.isOf(Lexer.LEXER.curContent(), "[")) {
@@ -599,7 +635,7 @@ public class Parser {
             unaryExp.type = SyntaxType.FuncCall;
 
             // 检查是否未定义
-            checkUndefined(Lexer.LEXER.curContent(), Lexer.LEXER.curLine());
+            checkUndefined(Lexer.LEXER.peek(), Lexer.LEXER.curLine());
             unaryExp.ident = Lexer.LEXER.peek();
             Lexer.LEXER.next();
             Lexer.LEXER.next("(");
@@ -736,7 +772,11 @@ public class Parser {
         return true;
     }
 
-    private void checkUndefined(String name, int line) {
+    private void checkUndefined(Token token, int line) {
+        String name = token.content;
+        if (!token.tokenType.equals(TokenType.IDENFR)) {
+            return;
+        }
         if (!GlobalConfigure.ERROR) {
             return;
         }

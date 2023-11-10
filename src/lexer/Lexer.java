@@ -51,7 +51,7 @@ public class Lexer {
 
     int pos = 0;    // 当前处于字符串的位置
     int line = 1;
-    int cnt = 0;    // 当前访问到哪个 token
+    public int cnt = 0;    // 当前访问到哪个 token
     String content;
     ArrayList<Token> tokens = new ArrayList<>();
 
