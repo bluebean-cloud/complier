@@ -81,7 +81,13 @@ public class Parser {
         if (Judge.isOf(Lexer.LEXER.curContent(), "[")) {
             Lexer.LEXER.next("[");
             constDef.constExp1 = parseConstExp();
-            Lexer.LEXER.next("]");
+            try {
+                Lexer.LEXER.next("]");
+            } catch (RuntimeException e) {
+                if (GlobalConfigure.ERROR) {
+                    ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "k");
+                }
+            }
         }
         if (Judge.isOf(Lexer.LEXER.curContent(), "[")) {
             Lexer.LEXER.next("[");
