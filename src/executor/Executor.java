@@ -46,6 +46,7 @@ public class Executor {
             throw new RuntimeException(e);
         }
         System.out.println(stringBuilder.toString());
+        System.out.println("\nMain func return value " + mainValue);
     }
 
     public int interpretMainFunc(MainFuncDef mainFuncDef) {
@@ -267,7 +268,7 @@ public class Executor {
                             new Var(RuntimeType.SIMPLE_VAR, interpretExp(funcRParams.exps.get(i))));
                 } else {    // 数组类型
                     temStack.addVar(funcFParams.funcFParams.get(i).getName(),
-                            interpretExp(funcRParams.exps.get(i), 0));  // 0 作为占位符
+                            interpretExpWithPointer(funcRParams.exps.get(i)));
                 }
             }
         }
@@ -283,10 +284,10 @@ public class Executor {
                 }
             }
         } catch (ReturnException e) {
-            curStack = null;
             return e.value;
+        } finally {
+            curStack = null;
         }
-        curStack = null;
         return 0;
     }
 
@@ -377,10 +378,8 @@ public class Executor {
                         interpretStmt(blockItem.stmt);
                 }
             }
+        } finally {
             curStack = curStack.parent;
-        } catch (ControlFlowException e) {
-            curStack = curStack.parent;
-            throw e;
         }
     }
 
@@ -505,7 +504,7 @@ public class Executor {
         return interpretAddExp(constExp.addExp);
     }
 
-    public Var interpretExp(Exp exp, int i) {   // 获取数组指针
+    public Var interpretExpWithPointer(Exp exp) {   // 获取数组指针
         PrimaryExp primaryExp = exp.getFirstUnaryExp().primaryExp;  // 一定是 PrimaryExp
         while (!primaryExp.type.equals(SyntaxType.LVal)) {
             primaryExp = primaryExp.exp.getFirstUnaryExp().primaryExp;
