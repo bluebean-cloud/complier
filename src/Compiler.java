@@ -1,8 +1,9 @@
-import executor.Executor;
 import lexer.Lexer;
+import mir.Manager;
 import parser.Parser;
 import util.ErrorLog;
 import util.GlobalConfigure;
+import visitor.Visitor;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,7 +13,7 @@ import java.nio.file.Paths;
 
 
 public class Compiler {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         try (PrintWriter output = new PrintWriter("output.txt")) {
             String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
             Lexer.LEXER.run(content);
@@ -22,11 +23,26 @@ public class Compiler {
                 ErrorLog.ERROR_LOGS.printErrorLogs();
                 return;
             }
-            output.print(Parser.PARSER.root.printSyntaxTree());
+            Visitor.VISITOR.run();
+            output.print(Manager.MANAGER.printCodes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Executor.EXECUTOR.run();
+        // 动态解释执行
+        // Executor.EXECUTOR.run();
+
+//        String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
+//        Lexer.LEXER.run(content);
+//        // output.print(Lexer.LEXER.printThis());
+//        Parser.PARSER.run();
+////        if (GlobalConfigure.ERROR && !ErrorLog.ERROR_LOGS.isEmpty()) {
+////            ErrorLog.ERROR_LOGS.printErrorLogs();
+////            return;
+////        }
+//
+//        // 执行 visitor
+//        Visitor.VISITOR.run();
+
     }
 
 }

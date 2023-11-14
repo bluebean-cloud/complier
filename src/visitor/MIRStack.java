@@ -1,14 +1,23 @@
 package visitor;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MIRStack {
     public MIRStack parent;
 
-    public ArrayList<MirVar> globalVars;
-    public ArrayList<MirVar> localVars;
+    public HashMap<String, MirVar> vars = new HashMap<>();
 
+    public void addVar(String name, MirVar var) {
+        vars.put(name, var);
+    }
 
+    public boolean contains(String name) {
+        return vars.containsKey(name);
+    }
+
+    public MirVar get(String name) {
+        return vars.get(name);
+    }
 
 
 }

@@ -6,8 +6,33 @@ public class Value {
 
     public String name;
 
+    public Integer constValue;
+    public boolean isConst = false;
+
+    public Value(Type type, String name) {
+        this.type = type;
+        this.name = name;
+    }
+
+    public Value(int value, boolean isConst) {
+        this.constValue = value;
+        this.isConst = isConst;
+        this.type = Type.I32;   // 数值常量
+    }
+
     public enum Type {
-        BASIC_BLOCK, FUNCTION, FUNCTION_PARAM, GLOBAL_VALUE, INSTRUCTION
+        I1("i1"), I8("i8"), I32("i32"), STR(".str"), POINTER("pointer"), VOID("void"), INS("ins");
+
+        final String name;
+
+        Type(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
 
