@@ -5,6 +5,11 @@ import java.util.HashMap;
 public class MIRStack {
     public MIRStack parent;
 
+    public MIRStack() {}
+    public MIRStack(MIRStack parent) {
+        this.parent = parent;
+    }
+
     public HashMap<String, MirVar> vars = new HashMap<>();
 
     public void addVar(String name, MirVar var) {

@@ -1,13 +1,14 @@
 package mir.derivedValue;
 
 import mir.Value;
+import mir.ValueType;
 
 public class StringLiteral extends Value {
 
     public String content;
 
     public StringLiteral(String content) {
-        super(Type.STR, ".str");
+        super(new ValueType(ValueType.Type.STR), ".str");
         StringBuilder stringBuilder = new StringBuilder();
         for (Character c: content.toCharArray()) {
             if (c == '\\') {

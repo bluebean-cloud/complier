@@ -20,9 +20,7 @@ public class MirVar {
         this.integerLiteral = value;
     }
 
-    public MirVar() {
-    }
-
+    public MirVar() {}
 
     public boolean useZeroInit = false;
     public Type type;
@@ -35,10 +33,16 @@ public class MirVar {
     // 若是 GLOBAL_VAL 则保存 GlobalVar
     public GlobalVar globalVar;
     public String name;     // 变量名字
+    public Value addr;     // 内存地址
+    public Value funcFParam;
 
     // 保存虚拟寄存器列表，都有哪些虚拟寄存器持有过值
     public ArrayList<Value> values = new ArrayList<>();
     public Value constValue;
+
+    public void addValue(Value value) {
+        values.add(value);
+    }
 
     public Value getLastValue() {
         return values.get(values.size() - 1);
@@ -52,7 +56,7 @@ public class MirVar {
         return getVar(x).getVar(y);
     }
 
-    public String getDataType() {
+    private String getDataType() {
         StringBuilder stringBuilder = new StringBuilder();
         if (compoundLiteral == null) {
             stringBuilder.append("i32");

@@ -2,6 +2,7 @@ package mir.derivedValue;
 
 import mir.Instruction;
 import mir.Value;
+import mir.ValueType;
 
 import java.util.ArrayList;
 
@@ -12,7 +13,17 @@ public class BasicBlock extends Value {
         instructions.add(instruction);
     }
 
-    public BasicBlock(Type type, String name) {
+    public BasicBlock(ValueType type, String name) {
         super(type, name);
     }
+
+    public String printCodes() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(name).append(":\n");
+        for (Instruction instruction: instructions) {
+            stringBuilder.append(instruction.printCodes());
+        }
+        return stringBuilder.toString();
+    }
+
 }

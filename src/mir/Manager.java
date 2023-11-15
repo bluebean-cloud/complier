@@ -18,6 +18,10 @@ public class Manager {
         globalVars.put(name, globalVar);
     }
 
+    public void addFunction(Function function) {
+        functions.add(function);
+    }
+
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("declare dso_local i32 @getint()\n")
@@ -25,9 +29,12 @@ public class Manager {
                 .append("declare dso_local void @putch(i32)\n")
                 .append("declare dso_local void @putstr(i8*)\n\n");
         for (GlobalVar globalVar: globalVars.values()) {
-            stringBuilder.append(globalVar.printDefinition());
+            stringBuilder.append(globalVar.printCodes());
         }
-
+        stringBuilder.append('\n');
+        for (Function function: functions) {
+            stringBuilder.append(function.printCodes()).append('\n');
+        }
         return stringBuilder.toString();
     }
 

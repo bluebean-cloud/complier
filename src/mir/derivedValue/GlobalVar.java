@@ -1,12 +1,13 @@
 package mir.derivedValue;
 
 import mir.Value;
+import mir.ValueType;
 import visitor.MirVar;
 
 public class GlobalVar extends Value {
     public MirVar mirVar;  // 与符号表中的全局变量关联
 
-    public String printDefinition() {
+    public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("@")
                 .append(name).append(" = dso_local global ")
@@ -19,7 +20,7 @@ public class GlobalVar extends Value {
         return stringBuilder.toString();
     }
 
-    public GlobalVar(Type type, String name) {
+    public GlobalVar(ValueType type, String name) {
         super(type, name);
     }
 }
