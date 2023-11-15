@@ -40,13 +40,13 @@ public class Visitor {
 
 
     private void visitFuncDef(FuncDef funcDef) {
-        curBlock = new BasicBlock(new ValueType(ValueType.Type.BLOCK), "__" + funcDef.getFuncName() + "__");
-        curFunction = new Function(new ValueType(ValueType.Type.FUNCTION), "@" + funcDef.getFuncName());
+        curBlock = new BasicBlock(ValueType.BLOCK, "__" + funcDef.getFuncName() + "__");
+        curFunction = new Function(ValueType.FUNCTION, "@" + funcDef.getFuncName());
         curFunction.addBlock(curBlock);
         if (funcDef.funcType.type.tokenType.equals(TokenType.VOIDTK)) {
-            curFunction.retType = new ValueType(ValueType.Type.VOID);
+            curFunction.retType = ValueType.VOID;
         } else {
-            curFunction.retType = new ValueType(ValueType.Type.I32);
+            curFunction.retType = ValueType.I32;
         }
 
         curStack = new MIRStack(curStack);
@@ -71,10 +71,10 @@ public class Visitor {
     }
 
     private void visitMainFuncDef(MainFuncDef mainFuncDef) {
-        curBlock = new BasicBlock(new ValueType(ValueType.Type.BLOCK), "__main__");
-        curFunction = new Function(new ValueType(ValueType.Type.FUNCTION), "@main");
+        curBlock = new BasicBlock(ValueType.BLOCK, "__main__");
+        curFunction = new Function(ValueType.FUNCTION, "@main");
         curFunction.addBlock(curBlock);
-        curFunction.retType = new ValueType(ValueType.Type.I32);
+        curFunction.retType = ValueType.I32;
         curStack = new MIRStack(curStack);
 
         for (BlockItem item: mainFuncDef.block.items) {
@@ -98,7 +98,7 @@ public class Visitor {
         switch (funcFParam.deep) {
             case 0:
                 mirVar = new MirVar(MirVar.Type.LOCAL_VAL, funcFParam.getName());
-                value = new Value(new ValueType(ValueType.Type.I32), "%" + funcFParam.getName() + "_" + curFunction.cnt);
+                value = new Value(ValueType.I32, "%" + funcFParam.getName() + "_" + curFunction.cnt);
                 curFunction.cnt++;
                 mirVar.funcFParam = value;
                 break;
@@ -128,9 +128,11 @@ public class Visitor {
     private void visitStmt(Stmt stmt) {
         switch (stmt.type) {
             case Assign:
-
+                visitAssign(stmt);
+                break;
             case Exp:
-
+                visitExp(stmt.exp);
+                break;
             case Block:
 
             case If:
@@ -155,6 +157,28 @@ public class Visitor {
         }
     }
 
+    private void visitBlock(Stmt stmt) {
+        curStack = new MIRStack(curStack);
+        for (BlockItem item: stmt.block.items) {
+            switch (item.type) {
+                case Decl:
+                    visitDecl(item.decl);
+                    break;
+                case Stmt:
+                    visitStmt(item.stmt);
+                    break;
+            }
+        }
+        curStack = curStack.parent;
+    }
+
+    private void visitAssign(Stmt stmt) {
+        Value lVal = visitLVal(stmt.lVal, false);  // 向此地址写入
+        Value value = visitExp(stmt.exp);
+        Instruction store = new Instruction(Instruction.InsType.store, "", null, value, lVal);
+        curBlock.addInstruction(store);
+    }
+
     private void visitReturn(Stmt stmt) {
         Instruction instruction;
         if (stmt.exp == null) { // ret void;
@@ -177,7 +201,7 @@ public class Visitor {
         if (varDef.constExp1 == null) { // 为 int
             mirVar = new MirVar(MirVar.Type.LOCAL_VAL, varDef.getName());
 
-            type.pointTo = new ValueType(ValueType.Type.I32);
+            type.pointTo = ValueType.I32;
             allocAddr = new Instruction(Instruction.InsType.alloca, name, type);
 
             if (varDef.initVal != null) {
@@ -189,7 +213,7 @@ public class Visitor {
             mirVar = new MirVar(MirVar.Type.LOCAL_ARRAY, varDef.getName());
 
             type.pointTo = type1;
-            type1.elementType = new ValueType(ValueType.Type.I32);
+            type1.elementType = ValueType.I32;
             type1.size = visitConstExp(varDef.constExp1);
             allocAddr = new Instruction(Instruction.InsType.alloca, name, type);
 
@@ -197,7 +221,7 @@ public class Visitor {
                 String initName = "%" + varDef.getName() + "_init_" + curFunction.cnt;
                 curFunction.cnt++;
                 ValueType ptrType = new ValueType(ValueType.Type.POINTER);
-                ptrType.pointTo = new ValueType(ValueType.Type.I32);
+                ptrType.pointTo = ValueType.I32;
                 Instruction ptr = new Instruction(Instruction.InsType.getelementptr, initName, ptrType, allocAddr, new Value(0, true), new Value(0, true));
                 ptr.getEleType = type;
                 curBlock.addInstruction(ptr);
@@ -218,7 +242,7 @@ public class Visitor {
 
             type.pointTo = type1;
             type1.elementType = type2;
-            type2.elementType = new ValueType(ValueType.Type.I32);
+            type2.elementType = ValueType.I32;
             type1.size = visitConstExp(varDef.constExp1);
             type2.size = visitConstExp(varDef.constExp2);
             allocAddr = new Instruction(Instruction.InsType.alloca, name, type);
@@ -229,10 +253,10 @@ public class Visitor {
                 int x = visitConstAddExp(varDef.constExp1.addExp);
                 int y = visitConstAddExp(varDef.constExp2.addExp);
                 ValueType ptrType = new ValueType(ValueType.Type.POINTER);
-                ptrType.pointTo = new ValueType(ValueType.Type.I32);
+                ptrType.pointTo = ValueType.I32;
                 for (int i = 0; i < x; i++) {
                     for (int j = 0; j < y; j++) {
-                        Instruction ptr = new Instruction(Instruction.InsType.getelementptr, initName, ptrType, allocAddr, new Value(x, true), new Value(y, true));
+                        Instruction ptr = new Instruction(Instruction.InsType.getelementptr, initName, ptrType, allocAddr, new Value(0, true), new Value(i, true), new Value(j, true));
                         ptr.getEleType = type;
                         curBlock.addInstruction(ptr);
                         Value value = visitExp(varDef.initVal.initVals.get(i).initVals.get(j).exp);
@@ -387,10 +411,10 @@ public class Visitor {
         // 生成分配指令，并添加到符号表中
         MirVar mirVar;
         ValueType type = new ValueType(ValueType.Type.POINTER);
-        GlobalVar globalVar = new GlobalVar(type, varDef.getName());
+        GlobalVar globalVar = new GlobalVar(type, "@" + varDef.getName());
         if (varDef.constExp1 == null) { // 为普通变量
             mirVar = new MirVar(MirVar.Type.GLOBAL_VAL, varDef.getName());
-            type.pointTo = new ValueType(ValueType.Type.I32);
+            type.pointTo = ValueType.I32;
             if (varDef.initVal != null) {
                 mirVar.integerLiteral = visitConstAddExp(varDef.initVal.exp.addExp);
             } else {
@@ -402,7 +426,7 @@ public class Visitor {
             if (varDef.constExp2 == null) {
                 ValueType type1 = new ValueType(ValueType.Type.ARRAY);
                 type.pointTo = type1;
-                type1.elementType = new ValueType(ValueType.Type.I32);
+                type1.elementType = ValueType.I32;
                 type1.size = visitConstExp(varDef.constExp1);
             } else {
                 ValueType type1 = new ValueType(ValueType.Type.ARRAY);
@@ -411,7 +435,7 @@ public class Visitor {
                 type2.size = visitConstExp(varDef.constExp2);
                 type.pointTo = type1;
                 type1.elementType = type2;
-                type2.elementType = new ValueType(ValueType.Type.I32);
+                type2.elementType = ValueType.I32;
             }
 
             if (varDef.initVal != null) {
@@ -455,15 +479,15 @@ public class Visitor {
         for (int i = 0; i < addExp.ops.size(); i++) {
             Value newValue = visitMulExp(addExp.mulExps.get(i + 1));
             Instruction instruction;
-            String name = "@tem" + curFunction.cnt;
+            String name = "%tem_" + curFunction.cnt;
             curFunction.cnt++;
             switch (addExp.ops.get(i).tokenType) {
                 case PLUS:
-                    instruction = new Instruction(Instruction.InsType.add, name, new ValueType(ValueType.Type.I32),  temValue, newValue);
+                    instruction = new Instruction(Instruction.InsType.add, name, ValueType.I32,  temValue, newValue);
                     curBlock.addInstruction(instruction);
                     break;
                 case MINU:
-                    instruction = new Instruction(Instruction.InsType.sub, name, new ValueType(ValueType.Type.I32), temValue, newValue);
+                    instruction = new Instruction(Instruction.InsType.sub, name, ValueType.I32, temValue, newValue);
                     curBlock.addInstruction(instruction);
                     break;
                 default:
@@ -479,19 +503,19 @@ public class Visitor {
         for (int i = 0; i < mulExp.ops.size(); i++) {
             Value newValue = visitUnaryExp(mulExp.unaryExps.get(i + 1));
             Instruction instruction;
-            String name = "@tem" + curFunction.cnt;
+            String name = "%tem_" + curFunction.cnt;
             curFunction.cnt++;
             switch (mulExp.ops.get(i).tokenType) {
                 case MULT:
-                    instruction = new Instruction(Instruction.InsType.mul, name, new ValueType(ValueType.Type.I32), temValue, newValue);
+                    instruction = new Instruction(Instruction.InsType.mul, name, ValueType.I32, temValue, newValue);
                     curBlock.addInstruction(instruction);
                     break;
                 case DIV:
-                    instruction = new Instruction(Instruction.InsType.sdiv, name, new ValueType(ValueType.Type.I32), temValue, newValue);
+                    instruction = new Instruction(Instruction.InsType.sdiv, name, ValueType.I32, temValue, newValue);
                     curBlock.addInstruction(instruction);
                     break;
                 case MOD:
-                    instruction = new Instruction(Instruction.InsType.srem, name, new ValueType(ValueType.Type.I32), temValue, newValue);
+                    instruction = new Instruction(Instruction.InsType.srem, name, ValueType.I32, temValue, newValue);
                     curBlock.addInstruction(instruction);
                     break;
                 default:
@@ -509,11 +533,11 @@ public class Visitor {
             case FuncCall:
                 return FuncCall();
             case UnaryOp:
-                String name = "@tem" + curFunction.cnt;
+                String name = "%tem_" + curFunction.cnt;
                 curFunction.cnt++;
                 Value value = visitUnaryExp(unaryExp.unaryExp);
                 if (unaryExp.unaryOp.op.tokenType.equals(TokenType.MINU)) {
-                    Instruction instruction = new Instruction(Instruction.InsType.mul, name, new ValueType(ValueType.Type.I32), value, new Value(-1, true));
+                    Instruction instruction = new Instruction(Instruction.InsType.mul, name, ValueType.I32, value, new Value(-1, true));
                     curBlock.addInstruction(instruction);
                     value = instruction;
                 }
@@ -528,7 +552,7 @@ public class Visitor {
             case Exp:
                 return visitExp(primaryExp.exp);
             case LVal:
-                return visitLVal(primaryExp.lVal);
+                return visitLVal(primaryExp.lVal, true);
             case Number:
                 return new Value(primaryExp.number.getNumber(), true);
             default:
@@ -540,16 +564,53 @@ public class Visitor {
         return null;
     }
 
-    private Value visitLVal(LVal lVal) {
+    private Value visitLVal(LVal lVal, boolean needLoad) {
         MirVar var = findVarValue(lVal.getName());
+        Instruction load;
+        Instruction ptr;
+        ValueType ptrType = new ValueType(ValueType.Type.POINTER);
+        ptrType.pointTo = ValueType.I32;
+        String name;
+        int x;
+        int y;
         switch (var.type) {
             case LOCAL_VAL:
-                return var.getLastValue();
             case GLOBAL_VAL:
-                return var.globalVar;
+                if (!needLoad) {
+                    return var.addr;
+                } else {
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    load = new Instruction(Instruction.InsType.load, name, ValueType.I32, var.addr);
+                    curBlock.addInstruction(load);
+                    return load;
+                }
             case LOCAL_ARRAY:
-
-            case GLOBAL_ARRAY:
+            case GLOBAL_ARRAY:  // 一定会返回 load 的值。函数传指针进行特殊处理
+                name = "%tem_" + curFunction.cnt;
+                curFunction.cnt++;
+                if (lVal.exp2 == null) {    // 一维数组
+                    x = visitConstAddExp(lVal.exp1.addExp);
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ptrType, var.addr, new Value(0, true), new Value(x, true));
+                    ptr.getEleType = var.addr.type;
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    load = new Instruction(Instruction.InsType.load, name, ValueType.I32, ptr);
+                    curBlock.addInstruction(ptr);
+                    curBlock.addInstruction(load);
+                } else {                    // 二维数组
+                    x = visitConstAddExp(lVal.exp1.addExp);
+                    y = visitConstAddExp(lVal.exp2.addExp);
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ptrType, var.addr, new Value(0, true), new Value(x, true), new Value(y, true));
+                    ptr.getEleType = ptrType;
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    load = new Instruction(Instruction.InsType.load, name, ValueType.I32, ptr);
+                    curBlock.addInstruction(ptr);
+                    curBlock.addInstruction(load);
+                }
+                return load;
+            case LOCAL_POINTER:
 
             default:
                 throw new RuntimeException("Unknown type: " + var.type);
@@ -567,6 +628,5 @@ public class Visitor {
         }
         throw new RuntimeException("Not Found Var: " + name);
     }
-
 
 }

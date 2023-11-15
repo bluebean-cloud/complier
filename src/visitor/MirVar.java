@@ -7,7 +7,8 @@ import java.util.ArrayList;
 
 public class MirVar {
     public enum Type {
-        GLOBAL_VAL, LOCAL_VAL, GLOBAL_ARRAY, LOCAL_ARRAY, CONST_VAR, CONST_ARRAY
+        GLOBAL_VAL, LOCAL_VAL, GLOBAL_ARRAY, LOCAL_ARRAY, CONST_VAR, CONST_ARRAY,
+        LOCAL_POINTER,      // 函数传指针，int[] 或 int[][exp]
     }
 
     public MirVar(Type type, String name) {

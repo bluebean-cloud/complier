@@ -18,7 +18,7 @@ public class Value {
         this.constValue = value;
         this.isConst = isConst;
         this.name = String.valueOf(value);
-        this.type = new ValueType(ValueType.Type.I32);   // 数值常量
+        this.type = ValueType.I32;   // 数值常量
     }
 
     @Override

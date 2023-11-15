@@ -6,6 +6,17 @@ public class ValueType {
     public ValueType elementType;
     public int size;
 
+    public static final ValueType I32 = new ValueType(Type.I32);
+    public static final ValueType I1 = new ValueType(Type.I1);
+    public static final ValueType I8 = new ValueType(Type.I8);
+    public static final ValueType VOID = new ValueType(Type.VOID);
+    public static final ValueType INS = new ValueType(Type.INS);
+    public static final ValueType BLOCK = new ValueType(Type.BLOCK);
+    public static final ValueType FUNCTION = new ValueType(Type.FUNCTION);
+
+
+
+
     public ValueType(Type type) {
         this.type = type;
     }

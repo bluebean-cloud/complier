@@ -18,22 +18,30 @@ public class Instruction extends Value {
         this.insType = Instype;
         this.values.addAll(Arrays.asList(values));
         for (Value value: values) {
-            value.use.addUser(this);
+            if (value.use != null) {
+                value.use.addUser(this);
+            }
         }
     }
 
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder("  ");
+        boolean first = true;
         switch (insType) {
             case add:
+                stringBuilder.append(name).append(" = add ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
                 break;
             case sub:
+                stringBuilder.append(name).append(" = sub ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
                 break;
             case mul:
+                stringBuilder.append(name).append(" = mul ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
                 break;
             case sdiv:
+                stringBuilder.append(name).append(" = div ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
                 break;
             case srem:
+                stringBuilder.append(name).append(" = srem ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
                 break;
             case icmp:
                 break;
@@ -47,6 +55,7 @@ public class Instruction extends Value {
                 stringBuilder.append(name).append(" = alloca ").append(type.pointTo).append('\n');
                 break;
             case load:
+                stringBuilder.append(name).append(" = load ").append(type).append(", ").append(values.get(0)).append('\n');
                 break;
             case store:
                 stringBuilder.append("store ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
@@ -54,7 +63,11 @@ public class Instruction extends Value {
             case getelementptr:
                 stringBuilder.append(name).append(" = getelementptr ").append(getEleType.pointTo).append(", ");
                 for (Value value: values) {
-                    stringBuilder.append(value).append(", ");
+                    if (!first) {
+                        stringBuilder.append(", ");
+                    }
+                    first = false;
+                    stringBuilder.append(value);
                 }
                 stringBuilder.append('\n');
                 break;

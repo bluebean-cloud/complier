@@ -9,8 +9,7 @@ public class GlobalVar extends Value {
 
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("@")
-                .append(name).append(" = dso_local global ")
+        stringBuilder.append(name).append(" = dso_local global ")
                 .append(mirVar.printDefinition());
         if (mirVar.type.equals(MirVar.Type.GLOBAL_VAL)) {
             stringBuilder.append(", align 4\n");
