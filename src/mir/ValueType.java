@@ -14,7 +14,17 @@ public class ValueType {
     public static final ValueType BLOCK = new ValueType(Type.BLOCK);
     public static final ValueType FUNCTION = new ValueType(Type.FUNCTION);
 
+    public boolean isVoid() {
+        return type.equals(Type.VOID);
+    }
 
+    public boolean isI32() {
+        return type.equals(Type.I32);
+    }
+
+    public ValueType getPointType() {
+        return new ValueType(Type.POINTER, this);
+    }
 
 
     public ValueType(Type type) {

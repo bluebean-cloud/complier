@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class Function extends Value {
     private ArrayList<BasicBlock> blocks = new ArrayList<>();
-    private ArrayList<FunctionParam> params = new ArrayList<>();
+    public ArrayList<Value> params = new ArrayList<>();
     private ArrayList<Instruction> decls = new ArrayList<>();
     public int cnt = 0;
     public ValueType retType;
@@ -25,17 +25,21 @@ public class Function extends Value {
         decls.add(instruction);
     }
 
+    public void addParam(Value param) {
+        params.add(param);
+    }
+
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("define dso_local ")
                 .append(retType).append(" ").append(name).append("(");
         boolean first = true;
-        for (FunctionParam param: params) {
+        for (Value param: params) {
             if (!first) {
                 stringBuilder.append(", ");
             }
             first = false;
-            stringBuilder.append(param.printCodes());
+            stringBuilder.append(param);
         }
         stringBuilder.append(") {\n");
         for (Instruction decl: decls) {

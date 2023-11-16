@@ -19,7 +19,9 @@ public class BasicBlock extends Value {
 
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(name).append(":\n");
+        if (!name.isEmpty()) {
+            stringBuilder.append(name).append(":\n");
+        }
         for (Instruction instruction: instructions) {
             stringBuilder.append(instruction.printCodes());
         }

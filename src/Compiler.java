@@ -24,7 +24,9 @@ public class Compiler {
                 return;
             }
             Visitor.VISITOR.run();
-            output.print(Manager.MANAGER.printCodes());
+            try (PrintWriter llvm = new PrintWriter("llvm_ir.txt")) {
+                llvm.print(Manager.MANAGER.printCodes());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

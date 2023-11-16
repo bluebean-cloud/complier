@@ -8,6 +8,11 @@ public class Instruction extends Value {
     public ArrayList<Value> values = new ArrayList<>();
     public InsType insType; // 指令类型
     public ValueType getEleType;    // for getelementptr，获取到的变量的类型
+    public String funcName;
+
+    public void addValue(Value value) {
+        values.add(value);
+    }
 
     public Instruction(ValueType type, String name) {
         super(type, name);
@@ -29,19 +34,19 @@ public class Instruction extends Value {
         boolean first = true;
         switch (insType) {
             case add:
-                stringBuilder.append(name).append(" = add ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
+                stringBuilder.append(name).append(" = add ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case sub:
-                stringBuilder.append(name).append(" = sub ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
+                stringBuilder.append(name).append(" = sub ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case mul:
-                stringBuilder.append(name).append(" = mul ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
+                stringBuilder.append(name).append(" = mul ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case sdiv:
-                stringBuilder.append(name).append(" = div ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
+                stringBuilder.append(name).append(" = div ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case srem:
-                stringBuilder.append(name).append(" = srem ").append(values.get(0)).append(", ").append(values.get(1)).append('\n');
+                stringBuilder.append(name).append(" = srem ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case icmp:
                 break;
@@ -50,6 +55,18 @@ public class Instruction extends Value {
             case or:
                 break;
             case call:
+                if (!name.isEmpty()) {
+                    stringBuilder.append(name).append(" = ");
+                }
+                stringBuilder.append("call ").append(type).append(" ").append(funcName).append("(");
+                for (Value value: values) {
+                    if (!first) {
+                        stringBuilder.append(", ");
+                    }
+                    first = false;
+                    stringBuilder.append(value);
+                }
+                stringBuilder.append(")\n");
                 break;
             case alloca:
                 stringBuilder.append(name).append(" = alloca ").append(type.pointTo).append('\n');

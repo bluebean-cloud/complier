@@ -26,4 +26,12 @@ public class Value {
         return type + " " + name;
     }
 
+    public String singleName() {
+        if (isConst) {
+            return type + " " + name;
+        } else {
+            return name;
+        }
+    }
+
 }

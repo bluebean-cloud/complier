@@ -22,6 +22,16 @@ public class Manager {
         functions.add(function);
     }
 
+    public Function findFunction(String name) {
+        name = "@" + name;
+        for (Function function: functions) {
+            if (name.equals(function.name)) {
+                return function;
+            }
+        }
+        return null;
+    }
+
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("declare dso_local i32 @getint()\n")
