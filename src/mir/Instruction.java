@@ -34,19 +34,19 @@ public class Instruction extends Value {
         boolean first = true;
         switch (insType) {
             case add:
-                stringBuilder.append(name).append(" = add ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
+                stringBuilder.append(name).append(" = add i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case sub:
-                stringBuilder.append(name).append(" = sub ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
+                stringBuilder.append(name).append(" = sub i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case mul:
-                stringBuilder.append(name).append(" = mul ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
+                stringBuilder.append(name).append(" = mul i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case sdiv:
-                stringBuilder.append(name).append(" = div ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
+                stringBuilder.append(name).append(" = div i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case srem:
-                stringBuilder.append(name).append(" = srem ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
+                stringBuilder.append(name).append(" = srem i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case icmp:
                 break;
@@ -129,6 +129,7 @@ public class Instruction extends Value {
         br,     // br i1 <cond>, label <iftrue>, label <iffalse>
                 // br label <dest>
         ret,    // ret <type> <value> ,ret void
+        label,
     }
 
 }

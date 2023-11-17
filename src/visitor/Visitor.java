@@ -55,10 +55,9 @@ public class Visitor {
             for (FuncFParam funcFParam: funcDef.funcFParams.funcFParams) {
                 visitFuncFParam(funcFParam);
             }
-        }
-
-        for (Value param: curFunction.params) {     // 分配函数形参空间
-            allocFuncParam(param);
+            for (int i = 0; i < curFunction.params.size(); i++) {
+                allocFuncParam(curFunction.params.get(i), funcDef.funcFParams.funcFParams.get(i).getName());
+            }
         }
 
         for (BlockItem item: funcDef.block.items) {
@@ -137,13 +136,21 @@ public class Visitor {
         }
     }
 
-    private void allocFuncParam(Value param) {  // 传入的是一个函数形参
+    private void allocFuncParam(Value param, String funcName) {  // 传入的是一个函数形参
         String name = param.name + "_" + curFunction.cnt;
         curFunction.cnt++;
         Instruction alloca = new Instruction(Instruction.InsType.alloca, name, param.type.getPointType());
         curFunction.addDecl(alloca);
         Instruction store = new Instruction(Instruction.InsType.store, "", null, param, alloca);
         curBlock.addInstruction(store);
+        MirVar mirVar;
+        if (param.type.isI32()) {
+            mirVar = new MirVar(MirVar.Type.LOCAL_VAL, funcName);
+        } else {
+            mirVar = new MirVar(MirVar.Type.LOCAL_POINTER, funcName);
+        }
+        mirVar.addr = alloca;
+        curStack.addVar(funcName, mirVar);
     }
 
     private void visitDecl(Decl decl) {
@@ -192,6 +199,47 @@ public class Visitor {
                 throw new RuntimeException("Unknown type: " + stmt.type);
         }
     }
+
+    private Instruction endLabel; // if_end / else_block / for_end
+    private Instruction beginLabel;   // if_ / for_
+
+    private void visitIf(Stmt stmt) {
+        String name = "%" + curFunction.cnt;
+        curFunction.cnt++;
+        beginLabel = new Instruction(Instruction.InsType.label, name, null);
+        name = "%" + curFunction.cnt;
+        curFunction.cnt++;
+        endLabel = new Instruction(Instruction.InsType.label, name, null);
+
+
+        BasicBlock block = new BasicBlock(ValueType.BLOCK, "");
+        block.addInstruction(beginLabel);
+        visitBlock(stmt.stmt1);
+        if (stmt.stmt2 != null) {
+            visitBlock(stmt.stmt2);
+        }
+    }
+
+    private void visitCond(Cond cond) {
+        visitLOrExp(cond.lOrExp);
+    }
+
+    private void visitLOrExp(LOrExp lOrExp) {
+
+    }
+
+    private void visitLAndExp(LAndExp lAndExp) {
+
+    }
+
+    private void visitEqExp(EqExp exp) {
+
+    }
+
+    private void visitRelExp(RelExp relExp) {
+
+    }
+
 
     private void visitPrintf(Stmt stmt) {
         String str = stmt.formatString.content;
@@ -538,7 +586,6 @@ public class Visitor {
         Manager.MANAGER.addGlobalVar(varDef.getName(), globalVar);
     }
 
-
     private Value visitExp(Exp exp) {    // 每个 Exp 最后都应该能用一个 Value 表示出来
         return visitAddExp(exp.addExp);
     }
@@ -640,8 +687,10 @@ public class Visitor {
         }
         Instruction call = new Instruction(Instruction.InsType.call, name, function.retType);
         call.funcName = function.name;
-        for (Exp exp: unaryExp.funcRParams.exps) {
-            call.addValue(visitExp(exp));
+        if (unaryExp.funcRParams != null) {
+            for (Exp exp : unaryExp.funcRParams.exps) {
+                call.addValue(visitExp(exp));
+            }
         }
         curBlock.addInstruction(call);
         if (function.retType.isVoid()) {
@@ -721,8 +770,76 @@ public class Visitor {
                         return ptr;
                     }
                 }
-            case LOCAL_POINTER:             //
+            case LOCAL_POINTER:
+                name = "%tem_" + curFunction.cnt;
+                curFunction.cnt++;
+                if (lVal.exp1 == null) {    // 返回数字或数组地址
+                    ValueType ptrType = new ValueType(ValueType.Type.POINTER);
+                    ptrType.pointTo = var.addr.type.pointTo.elementType;    // 什么歃畀的疯狂指
+                    ptr = new Instruction(Instruction.InsType.load, name, ValueType.I32, var.addr);
+                    curBlock.addInstruction(ptr);
+                    return ptr;
+                } else if (lVal.exp2 == null) {    // 寻址一次，可能寻址到地址
+                    x = visitConstAddExp(lVal.exp1.addExp);
+                    load = new Instruction(Instruction.InsType.load, name, var.addr.type.pointTo, var.addr);    // 先将地址 load 下来
+                    curBlock.addInstruction(load);
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, var.addr.type.pointTo, load, new Value(x, true));
+                    ptr.getEleType = var.addr.type.pointTo;
+                    curBlock.addInstruction(ptr);
+                    if (!var.addr.type.pointTo.pointTo.isI32()) {   // 传指针
+                        name = "%tem_" + curFunction.cnt;
+                        curFunction.cnt++;
+                        ptr = new Instruction(Instruction.InsType.getelementptr, name, ValueType.I32.getPointType(), ptr, new Value(0, true), new Value(0, true));
+                        ptr.getEleType = var.addr.type.pointTo;
+                        curBlock.addInstruction(ptr);
+                        return ptr;
+                    } else if (needLoad) {
+                        name = "%tem_" + curFunction.cnt;
+                        curFunction.cnt++;
+                        load = new Instruction(Instruction.InsType.load, name, load.type.pointTo, ptr);
+                        curBlock.addInstruction(load);
+                        return load;
+                    } else {
+                        return ptr;
+                    }
+                } else {                    // 寻址两次，一定能寻址到 I32
+                    x = visitConstAddExp(lVal.exp1.addExp);
+                    y = visitConstAddExp(lVal.exp2.addExp);
+                    load = new Instruction(Instruction.InsType.load, name, var.addr.type.pointTo, var.addr);    // 先将地址 load 下来
+                    curBlock.addInstruction(load);
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, var.addr.type.pointTo, load, new Value(x, true));
+                    ptr.getEleType = var.addr.type.pointTo;
+                    curBlock.addInstruction(ptr);
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ValueType.I32.getPointType(), ptr, new Value(0, true), new Value(y, true));
+                    ptr.getEleType = var.addr.type.pointTo;
+                    curBlock.addInstruction(ptr);
 
+                    if (needLoad) {
+                        name = "%tem_" + curFunction.cnt;
+                        curFunction.cnt++;
+                        load = new Instruction(Instruction.InsType.load, name, ValueType.I32, ptr);
+                        curBlock.addInstruction(load);
+                        return load;
+                    } else {
+                        return ptr;
+                    }
+                }
+            case CONST_VAR:
+                return new Value(var.integerLiteral, true);
+            case CONST_ARRAY:
+                x = visitConstAddExp(lVal.exp1.addExp);
+                if (lVal.exp2 == null) {
+                    return new Value(var.getVar(x).integerLiteral, true);
+                } else {
+                    y = visitConstAddExp(lVal.exp2.addExp);
+                    return new Value(var.getVar(x, y).integerLiteral, true);
+                }
             default:
                 throw new RuntimeException("Unknown type: " + var.type);
         }

@@ -33,17 +33,6 @@ public class Compiler {
         // 动态解释执行
         // Executor.EXECUTOR.run();
 
-//        String content = new String(Files.readAllBytes(Paths.get("testfile.txt")), StandardCharsets.UTF_8);
-//        Lexer.LEXER.run(content);
-//        // output.print(Lexer.LEXER.printThis());
-//        Parser.PARSER.run();
-////        if (GlobalConfigure.ERROR && !ErrorLog.ERROR_LOGS.isEmpty()) {
-////            ErrorLog.ERROR_LOGS.printErrorLogs();
-////            return;
-////        }
-//
-//        // 执行 visitor
-//        Visitor.VISITOR.run();
 
     }
 
