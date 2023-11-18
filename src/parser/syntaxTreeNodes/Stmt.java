@@ -17,6 +17,14 @@ public class Stmt implements SyntaxTreeNode {
     public Token formatString;
     public ArrayList<Exp> exps = new ArrayList<>();
 
+    public Stmt() {}
+
+    public Stmt(ForStmt forStmt) {
+        this.type = SyntaxType.Assign;
+        this.lVal = forStmt.lVal;
+        this.exp = forStmt.exp;
+    }
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

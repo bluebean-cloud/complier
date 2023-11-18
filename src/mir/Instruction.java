@@ -9,6 +9,7 @@ public class Instruction extends Value {
     public InsType insType; // 指令类型
     public ValueType getEleType;    // for getelementptr，获取到的变量的类型
     public String funcName;
+    public String cmpType;
 
     public void addValue(Value value) {
         values.add(value);
@@ -43,12 +44,14 @@ public class Instruction extends Value {
                 stringBuilder.append(name).append(" = mul i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case sdiv:
-                stringBuilder.append(name).append(" = div i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
+                stringBuilder.append(name).append(" = sdiv i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case srem:
                 stringBuilder.append(name).append(" = srem i32 ").append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case icmp:
+                stringBuilder.append(name).append(" = icmp ").append(cmpType).append(" i32 ")
+                        .append(values.get(0).singleName()).append(", ").append(values.get(1).singleName()).append('\n');
                 break;
             case and:
                 break;
@@ -91,10 +94,18 @@ public class Instruction extends Value {
             case phi:
                 break;
             case zext:
+                stringBuilder.append(name).append(" = zext ").append(values.get(0)).append(" to ").append(type).append('\n');
                 break;
             case trunc:
                 break;
             case br:
+                if (values.size() == 1) {
+                    stringBuilder.append("br label ").append(values.get(0).singleName()).append('\n');
+                } else {
+                    stringBuilder.append("br ").append(values.get(0))
+                            .append(", label ").append(values.get(1).singleName())
+                            .append(", label ").append(values.get(2).singleName()).append('\n');
+                }
                 break;
             case ret:
                 stringBuilder.append("ret ");
@@ -103,6 +114,9 @@ public class Instruction extends Value {
                 } else {
                     stringBuilder.append(values.get(0)).append('\n');
                 }
+                break;
+            case label:
+                stringBuilder.append(name.substring(1)).append(":\n");
                 break;
         }
         return stringBuilder.toString();

@@ -25,7 +25,7 @@ public class Visitor {
     public void run() {
         CompUnit root = Parser.PARSER.root;
         for (ConstDef constDef: Parser.PARSER.curScope.constDefs) {
-            visitConstDef(constDef);
+            visitConstDef(constDef, true);
         }
         for (VarDef varDef: Parser.PARSER.curScope.varDefs) {
             visitGlobalVarDef(varDef);
@@ -156,7 +156,7 @@ public class Visitor {
     private void visitDecl(Decl decl) {
         if (decl.constDecl != null) {   // 为常量
             for (ConstDef constDef: decl.constDecl.constDefs) {
-                visitConstDef(constDef);
+                visitConstDef(constDef, false);
             }
         } else {    // 不为常量
             for (VarDef varDef: decl.varDecl.varDefs) {
@@ -177,13 +177,17 @@ public class Visitor {
                 visitBlock(stmt);
                 break;
             case If:
-
+                visitIf(stmt);
+                break;
             case For:
-
+                visitFor(stmt);
+                break;
             case Break:
-
+                visitBreak();
+                break;
             case Continue:
-
+                visitContinue();
+                break;
             case Return:
                 visitReturn(stmt);
                 break;
@@ -200,44 +204,238 @@ public class Visitor {
         }
     }
 
-    private Instruction endLabel; // if_end / else_block / for_end
-    private Instruction beginLabel;   // if_ / for_
+    private void visitContinue() {
+        Instruction br = new Instruction(Instruction.InsType.br, "", null, curContinue);
+        curBlock.addInstruction(br);
+    }
+
+    private void visitBreak() {
+        Instruction br = new Instruction(Instruction.InsType.br, "", null, curBreak);
+        curBlock.addInstruction(br);
+    }
+
+    Instruction curBreak;
+    Instruction curContinue;
+
+    private void visitFor(Stmt stmt) {
+        if (stmt.forStmt1 != null) {
+            Stmt forStmt = new Stmt(stmt.forStmt1);
+            visitStmt(forStmt);
+        }
+        String condName = "%cond_" + curFunction.cnt;
+        curFunction.cnt++;
+        String forBegin = "%for_begin_" + curFunction.cnt;
+        curFunction.cnt++;
+        String forEnd = "%for_end_" + curFunction.cnt;
+        curFunction.cnt++;
+        String forStmtName = "%for_stmt" + curFunction.cnt;
+        curFunction.cnt++;
+        Instruction condLabel = new Instruction(Instruction.InsType.label, condName, null);
+        Instruction forBeginLabel = new Instruction(Instruction.InsType.label, forBegin, null);
+        Instruction forEndLabel = new Instruction(Instruction.InsType.label, forEnd, null);
+        Instruction forStmt2 = new Instruction(Instruction.InsType.label, forStmtName, null);
+
+        Instruction temBreak = curBreak;
+        Instruction temContinue = curContinue;
+        curBreak = forEndLabel;
+        curContinue = forStmt2;
+
+        Instruction br = new Instruction(Instruction.InsType.br, "", null, condLabel);
+        curBlock.addInstruction(br);
+
+        curBlock.addInstruction(condLabel);
+
+        if (stmt.cond != null) {
+            visitCond(stmt.cond, forBeginLabel, forEndLabel, null);
+        } else {
+            br = new Instruction(Instruction.InsType.br, "", null, forBeginLabel);
+            curBlock.addInstruction(br);
+        }
+        curBlock.addInstruction(forBeginLabel);
+        visitStmt(stmt.stmt1);
+        br = new Instruction(Instruction.InsType.br, "", null, forStmt2);
+        curBlock.addInstruction(br);
+
+        curBlock.addInstruction(forStmt2);
+        if (stmt.forStmt2 != null) {
+            Stmt forStmt = new Stmt(stmt.forStmt2);
+            visitStmt(forStmt);
+        }
+        br = new Instruction(Instruction.InsType.br, "", null, condLabel);
+        curBlock.addInstruction(br);
+        curBlock.addInstruction(forEndLabel);
+        curBreak = temBreak;
+        curContinue = temContinue;
+    }
+
+//    private Instruction endLabel; // if_end / else_block / for_end
+//    private Instruction beginLabel;   // if_ / for_
+//    private Instruction elseLabel;
 
     private void visitIf(Stmt stmt) {
-        String name = "%" + curFunction.cnt;
+        String name1 = "%label" + curFunction.cnt;
         curFunction.cnt++;
-        beginLabel = new Instruction(Instruction.InsType.label, name, null);
-        name = "%" + curFunction.cnt;
-        curFunction.cnt++;
-        endLabel = new Instruction(Instruction.InsType.label, name, null);
 
-
-        BasicBlock block = new BasicBlock(ValueType.BLOCK, "");
-        block.addInstruction(beginLabel);
-        visitBlock(stmt.stmt1);
+        Instruction beginLabel = new Instruction(Instruction.InsType.label, name1, null);
+        Instruction elseLabel;
+        Instruction endLabel;
+        String name2;
+        String name3 = "";
         if (stmt.stmt2 != null) {
+            name2 = "%label" + curFunction.cnt;
+            curFunction.cnt++;
+            elseLabel = new Instruction(Instruction.InsType.label, name2, null);
+            name3 = "%label" + curFunction.cnt;   // end
+            curFunction.cnt++;
+            endLabel = new Instruction(Instruction.InsType.label, name3, null);
+        } else {
+            name2 = "%label" + curFunction.cnt;
+            curFunction.cnt++;
+            endLabel = new Instruction(Instruction.InsType.label, name2, null);
+            elseLabel = null;   // 修复if else if 的 bug。纯屎山
+        }
+
+        visitCond(stmt.cond, beginLabel, endLabel, elseLabel);
+
+        // curBlock = new BasicBlock(ValueType.BLOCK, name1.substring(1));
+        // curFunction.addBlock(curBlock);
+        curBlock.addInstruction(beginLabel);
+
+        visitBlock(stmt.stmt1);
+
+        curBlock.addInstruction(new Instruction(Instruction.InsType.br, "", null, endLabel));
+
+        if (stmt.stmt2 != null) {
+            // curBlock = new BasicBlock(ValueType.BLOCK, name2.substring(1));
+            // curFunction.addBlock(curBlock);
+            curBlock.addInstruction(elseLabel);
             visitBlock(stmt.stmt2);
+            curBlock.addInstruction(new Instruction(Instruction.InsType.br, "", null, endLabel));
+
+            // curBlock = new BasicBlock(ValueType.BLOCK, name3.substring(1));
+            // curFunction.addBlock(curBlock);
+
+        } else {
+//            curBlock = new BasicBlock(ValueType.BLOCK, name2.substring(1));
+            // curFunction.addBlock(curBlock);
+        }
+        curBlock.addInstruction(endLabel);
+
+    }
+
+    private void visitCond(Cond cond, Instruction beginLabel, Instruction endLabel, Instruction elseLabel) {
+        visitLOrExp(cond.lOrExp, beginLabel, endLabel, elseLabel);
+    }
+
+
+    private void visitLOrExp(LOrExp lOrExp, Instruction beginLabel, Instruction endLabel, Instruction elseLabel) {
+        Instruction lOrNext;
+        for (int i = 0; i < lOrExp.andExps.size(); i++) {
+            if (i < lOrExp.andExps.size() - 1) {
+                String name = "%label" + curFunction.cnt;
+                curFunction.cnt++;
+                lOrNext = new Instruction(Instruction.InsType.label, name, null);
+                visitLAndExp(lOrExp.andExps.get(i), lOrNext, beginLabel);   // true->beginLabel false->lOrNext
+                // 若为真则跳调走
+                // Instruction br = new Instruction(Instruction.InsType.br, "", null, cond, beginLabel, lOrNext);
+                // curBlock.addInstruction(br);
+                curBlock.addInstruction(lOrNext);
+            } else {
+                visitLAndExp(lOrExp.andExps.get(i), elseLabel != null ? elseLabel : endLabel, beginLabel);
+                // 最后一个块可以不加跳转
+            }
         }
     }
 
-    private void visitCond(Cond cond) {
-        visitLOrExp(cond.lOrExp);
+    Instruction lAndNext;
+
+    private void visitLAndExp(LAndExp lAndExp, Instruction orNext, Instruction orEnd) {
+        for (int i = 0; i < lAndExp.eqExps.size(); i++) {
+            if (i < lAndExp.eqExps.size() - 1) {
+                String name = "%label" + curFunction.cnt;
+                curFunction.cnt++;
+                lAndNext = new Instruction(Instruction.InsType.label, name, null);
+                visitEqExp(lAndExp.eqExps.get(i), lAndNext, orNext);  // True->lAndNext False->orNext
+                curBlock.addInstruction(lAndNext);
+            } else {
+                lAndNext = orNext;
+                visitEqExp(lAndExp.eqExps.get(i), orEnd, orNext); // True->orEnd False->orNext
+            }
+        }
     }
 
-    private void visitLOrExp(LOrExp lOrExp) {
-
+    private void visitEqExp(EqExp eqExp, Instruction andNext, Instruction andEnd) {
+        Value value = visitRelExp(eqExp.relExps.get(0));
+        for (int i = 0; i < eqExp.ops.size(); i++) {
+            Value value1 = visitRelExp(eqExp.relExps.get(i + 1));
+            Instruction icmp;
+            String name = "%tem_" + curFunction.cnt;
+            curFunction.cnt++;
+            switch (eqExp.ops.get(i).tokenType) {
+                case EQL:
+                    icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, value1);
+                    icmp.cmpType = "eq";
+                    curBlock.addInstruction(icmp);
+                    break;
+                case NEQ:
+                    icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, value1);
+                    icmp.cmpType = "ne";
+                    curBlock.addInstruction(icmp);
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+            name = "%tem_" + curFunction.cnt;
+            curFunction.cnt++;
+            value = new Instruction(Instruction.InsType.zext, name, ValueType.I32, icmp);   // 将 i1 扩展至 i32
+            curBlock.addInstruction((Instruction) value);
+        }
+        String name = "%tem_" + curFunction.cnt;
+        curFunction.cnt++;
+        Instruction cmpz = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, new Value(0, true));
+        cmpz.cmpType = "ne";
+        curBlock.addInstruction(cmpz);
+        Instruction br = new Instruction(Instruction.InsType.br, "", null, cmpz, andNext, andEnd);
+        curBlock.addInstruction(br);
     }
 
-    private void visitLAndExp(LAndExp lAndExp) {
-
-    }
-
-    private void visitEqExp(EqExp exp) {
-
-    }
-
-    private void visitRelExp(RelExp relExp) {
-
+    private Value visitRelExp(RelExp relExp) {
+        Value value = visitAddExp(relExp.addExps.get(0));
+        for (int i = 0; i < relExp.ops.size(); i++) {
+            Value value1 = visitAddExp(relExp.addExps.get(i + 1));
+            Instruction icmp;
+            String name = "%tem_" + curFunction.cnt;
+            curFunction.cnt++;
+            switch (relExp.ops.get(i).tokenType) {
+                case GRE:   // >
+                    icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, value1);
+                    icmp.cmpType = "sgt";
+                    curBlock.addInstruction(icmp);
+                    break;
+                case GEQ:   // >=
+                    icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, value1);
+                    icmp.cmpType = "sge";
+                    curBlock.addInstruction(icmp);
+                    break;
+                case LSS:   // <
+                    icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, value1);
+                    icmp.cmpType = "slt";
+                    curBlock.addInstruction(icmp);
+                    break;
+                case LEQ:   // <=
+                    icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, value1);
+                    icmp.cmpType = "sle";
+                    curBlock.addInstruction(icmp);
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+            name = "%tem_" + curFunction.cnt;
+            curFunction.cnt++;
+            value = new Instruction(Instruction.InsType.zext, name, ValueType.I32, icmp);   // 将 i1 扩展至 i32
+            curBlock.addInstruction((Instruction) value);
+        }
+        return value;
     }
 
 
@@ -268,7 +466,10 @@ public class Visitor {
 
     private void visitGetInt(Stmt stmt) {
         Value lVal = visitLVal(stmt.lVal, false);   // 向此地址写入
-        Instruction getInt = new Instruction(Instruction.InsType.call, "@getint", ValueType.I32);
+        String name = "%tem_" + curFunction.cnt;
+        curFunction.cnt++;
+        Instruction getInt = new Instruction(Instruction.InsType.call, name, ValueType.I32);
+        getInt.funcName = "@getint";
         curBlock.addInstruction(getInt);
         Instruction store = new Instruction(Instruction.InsType.store, "", null, getInt, lVal);
         curBlock.addInstruction(store);
@@ -276,15 +477,19 @@ public class Visitor {
 
     private void visitBlock(Stmt stmt) {
         curStack = new MIRStack(curStack);
-        for (BlockItem item: stmt.block.items) {
-            switch (item.type) {
-                case Decl:
-                    visitDecl(item.decl);
-                    break;
-                case Stmt:
-                    visitStmt(item.stmt);
-                    break;
+        if (stmt.block != null) {
+            for (BlockItem item : stmt.block.items) {
+                switch (item.type) {
+                    case Decl:
+                        visitDecl(item.decl);
+                        break;
+                    case Stmt:
+                        visitStmt(item.stmt);
+                        break;
+                }
             }
+        } else {
+            visitStmt(stmt);
         }
         curStack = curStack.parent;
     }
@@ -393,7 +598,7 @@ public class Visitor {
 
     }
 
-    private void visitConstDef(ConstDef constDef) {
+    private void visitConstDef(ConstDef constDef, boolean isGlobal) {   //
         // 构造常量 M_Var
         MirVar mirVar;
         if (constDef.constExp1 == null) {   // 为 int类型
@@ -403,11 +608,102 @@ public class Visitor {
             } else {
                 mirVar.integerLiteral = 0;
             }
-        } else {    // 为数组类型，常量一定拥有初始值
-            mirVar = new MirVar(MirVar.Type.CONST_ARRAY, constDef.getName());
-            mirVar.compoundLiteral = visitConstInitVals(constDef.constInitVal.constInitVals);
+            curStack.addVar(constDef.getName(), mirVar);
+        } else {    // 数组类型应该置入内存。。。。
+            if (isGlobal) {
+                mirVar = new MirVar(MirVar.Type.GLOBAL_ARRAY, constDef.getName());
+                ValueType type = new ValueType(ValueType.Type.POINTER);
+                GlobalVar globalVar = new GlobalVar(type, "@" + constDef.getName());
+                if (constDef.constExp2 == null) {
+                    ValueType type1 = new ValueType(ValueType.Type.ARRAY);
+                    type.pointTo = type1;
+                    type1.elementType = ValueType.I32;
+                    type1.size = visitConstExp(constDef.constExp1);
+                } else {
+                    ValueType type1 = new ValueType(ValueType.Type.ARRAY);
+                    ValueType type2 = new ValueType(ValueType.Type.ARRAY);
+                    type1.size = visitConstExp(constDef.constExp1);
+                    type2.size = visitConstExp(constDef.constExp2);
+                    type.pointTo = type1;
+                    type1.elementType = type2;
+                    type2.elementType = ValueType.I32;
+                }
+                mirVar.compoundLiteral = visitConstInitVals(constDef.constInitVal.constInitVals);
+                globalVar.mirVar = mirVar;
+                mirVar.addr = globalVar;
+
+                globalHeap.addVar(constDef.getName(), mirVar);
+                Manager.MANAGER.addGlobalVar(constDef.getName(), globalVar);
+
+            } else {
+                mirVar = new MirVar(MirVar.Type.LOCAL_ARRAY, constDef.getName());
+                String name = "%" + constDef.getName() + "_" + curFunction.cnt;
+                curFunction.cnt++;
+                ValueType type = new ValueType(ValueType.Type.POINTER);
+                ValueType type1 = new ValueType(ValueType.Type.ARRAY);
+                ValueType type2 = new ValueType(ValueType.Type.ARRAY);
+                Instruction allocAddr;
+                mirVar = new MirVar(MirVar.Type.LOCAL_ARRAY, constDef.getName());
+                if (constDef.constExp2 == null) {
+                    type.pointTo = type1;
+                    type1.elementType = ValueType.I32;
+                    type1.size = visitConstExp(constDef.constExp1);
+                    allocAddr = new Instruction(Instruction.InsType.alloca, name, type);
+                    String initName = "%" + constDef.getName() + "_init_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    ValueType ptrType = new ValueType(ValueType.Type.POINTER);
+                    ptrType.pointTo = ValueType.I32;
+                    Instruction ptr = new Instruction(Instruction.InsType.getelementptr, initName, ptrType, allocAddr, new Value(0, true), new Value(0, true));
+                    ptr.getEleType = type;
+                    curBlock.addInstruction(ptr);
+                    for (ConstInitVal initVal: constDef.constInitVal.constInitVals) {
+                        int x = visitConstExp(initVal.constExp);
+                        Value value = new Value(x, true);
+                        Instruction store = new Instruction(Instruction.InsType.store, "", null, value, ptr);
+                        curBlock.addInstruction(store);
+                        initName = "%" + constDef.getName() + "_init_" + curFunction.cnt;
+                        curFunction.cnt++;
+                        // 指针前移
+                        ptr = new Instruction(Instruction.InsType.getelementptr, initName, ptrType, ptr, new Value(1, true));
+                        ptr.getEleType = ptrType;
+                        curBlock.addInstruction(ptr);
+                    }
+                } else {
+                    type.pointTo = type1;
+                    type1.elementType = type2;
+                    type2.elementType = ValueType.I32;
+                    type1.size = visitConstExp(constDef.constExp1);
+                    type2.size = visitConstExp(constDef.constExp2);
+                    allocAddr = new Instruction(Instruction.InsType.alloca, name, type);
+
+                    String initName = "%" + constDef.getName() + "_init_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    int x = visitConstAddExp(constDef.constExp1.addExp);
+                    int y = visitConstAddExp(constDef.constExp2.addExp);
+                    ValueType ptrType = new ValueType(ValueType.Type.POINTER);
+                    ptrType.pointTo = ValueType.I32;
+                    for (int i = 0; i < x; i++) {
+                        for (int j = 0; j < y; j++) {
+                            Instruction ptr = new Instruction(Instruction.InsType.getelementptr, initName, ptrType, allocAddr, new Value(0, true), new Value(i, true), new Value(j, true));
+                            ptr.getEleType = type;
+                            curBlock.addInstruction(ptr);
+                            int v = visitConstExp(constDef.constInitVal.constInitVals.get(i).constInitVals.get(j).constExp);
+                            Value value = new Value(v, true);
+                            Instruction store = new Instruction(Instruction.InsType.store, "", null, value, ptr);
+                            curBlock.addInstruction(store);
+
+                            initName = "%" + constDef.getName() + "_init_" + curFunction.cnt;
+                            curFunction.cnt++;
+                        }
+                    }
+                }
+
+                curFunction.addDecl(allocAddr);
+                mirVar.addr = allocAddr;
+                curStack.addVar(constDef.getName(), mirVar);
+            }
+
         }
-        curStack.addVar(constDef.getName(), mirVar);
     }
 
     private ArrayList<MirVar> visitConstInitVals(ArrayList<ConstInitVal> constInitVals) {
@@ -649,11 +945,22 @@ public class Visitor {
             case FuncCall:
                 return FuncCall(unaryExp);
             case UnaryOp:
-                String name = "%tem_" + curFunction.cnt;
-                curFunction.cnt++;
                 Value value = visitUnaryExp(unaryExp.unaryExp);
                 if (unaryExp.unaryOp.op.tokenType.equals(TokenType.MINU)) {
+                    String name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
                     Instruction instruction = new Instruction(Instruction.InsType.mul, name, ValueType.I32, new Value(-1, true), value);
+                    curBlock.addInstruction(instruction);
+                    value = instruction;
+                } else if (unaryExp.unaryOp.op.tokenType.equals(TokenType.NOT)) {
+                    String name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    Instruction icmp = new Instruction(Instruction.InsType.icmp, name, ValueType.I1, value, new Value(0, true));
+                    icmp.cmpType = "eq";
+                    curBlock.addInstruction(icmp);
+                    name = "%tem_" + curFunction.cnt;
+                    curFunction.cnt++;
+                    Instruction instruction = new Instruction(Instruction.InsType.zext, name, ValueType.I32, icmp);
                     curBlock.addInstruction(instruction);
                     value = instruction;
                 }
@@ -705,8 +1012,8 @@ public class Visitor {
         Instruction load;
         Instruction ptr;
         String name;
-        int x;
-        int y;
+        Value x;
+        Value y;
         switch (var.type) {
             case LOCAL_VAL:
             case GLOBAL_VAL:
@@ -731,10 +1038,11 @@ public class Visitor {
                     curBlock.addInstruction(ptr);
                     return ptr;
                 } else if (lVal.exp2 == null) {    // 寻址一次，可能寻址到地址
-                    x = visitConstAddExp(lVal.exp1.addExp);
+
+                    x = visitExp(lVal.exp1);
                     ValueType ptrType = new ValueType(ValueType.Type.POINTER);
                     ptrType.pointTo = var.addr.type.pointTo.elementType;    // 什么歃畀的疯狂指
-                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ptrType, var.addr, new Value(0, true), new Value(x, true));
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ptrType, var.addr, new Value(0, true), x);
                     ptr.getEleType = var.addr.type;
                     curBlock.addInstruction(ptr);
                     if (ptrType.pointTo.isI32()) {  // 一维数组
@@ -753,11 +1061,11 @@ public class Visitor {
                         return ptr;
                     }
                 } else {                    // 寻址两次，一定能寻址到 I32
-                    x = visitConstAddExp(lVal.exp1.addExp);
-                    y = visitConstAddExp(lVal.exp2.addExp);
+                    x = visitExp(lVal.exp1);
+                    y = visitExp(lVal.exp2);
                     ValueType ptrType = new ValueType(ValueType.Type.POINTER);
                     ptrType.pointTo = var.addr.type.pointTo ;    // 什么歃畀的疯狂指
-                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ValueType.I32.getPointType(), var.addr, new Value(0, true), new Value(x, true), new Value(y, true));
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ValueType.I32.getPointType(), var.addr, new Value(0, true), x, y);
                     ptr.getEleType = ptrType;
                     curBlock.addInstruction(ptr);
                     if (needLoad) {
@@ -780,12 +1088,12 @@ public class Visitor {
                     curBlock.addInstruction(ptr);
                     return ptr;
                 } else if (lVal.exp2 == null) {    // 寻址一次，可能寻址到地址
-                    x = visitConstAddExp(lVal.exp1.addExp);
+                    x = visitExp(lVal.exp1);
                     load = new Instruction(Instruction.InsType.load, name, var.addr.type.pointTo, var.addr);    // 先将地址 load 下来
                     curBlock.addInstruction(load);
                     name = "%tem_" + curFunction.cnt;
                     curFunction.cnt++;
-                    ptr = new Instruction(Instruction.InsType.getelementptr, name, var.addr.type.pointTo, load, new Value(x, true));
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, var.addr.type.pointTo, load, x);
                     ptr.getEleType = var.addr.type.pointTo;
                     curBlock.addInstruction(ptr);
                     if (!var.addr.type.pointTo.pointTo.isI32()) {   // 传指针
@@ -805,18 +1113,18 @@ public class Visitor {
                         return ptr;
                     }
                 } else {                    // 寻址两次，一定能寻址到 I32
-                    x = visitConstAddExp(lVal.exp1.addExp);
-                    y = visitConstAddExp(lVal.exp2.addExp);
+                    x = visitExp(lVal.exp1);
+                    y = visitExp(lVal.exp2);
                     load = new Instruction(Instruction.InsType.load, name, var.addr.type.pointTo, var.addr);    // 先将地址 load 下来
                     curBlock.addInstruction(load);
                     name = "%tem_" + curFunction.cnt;
                     curFunction.cnt++;
-                    ptr = new Instruction(Instruction.InsType.getelementptr, name, var.addr.type.pointTo, load, new Value(x, true));
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, var.addr.type.pointTo, load, x);
                     ptr.getEleType = var.addr.type.pointTo;
                     curBlock.addInstruction(ptr);
                     name = "%tem_" + curFunction.cnt;
                     curFunction.cnt++;
-                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ValueType.I32.getPointType(), ptr, new Value(0, true), new Value(y, true));
+                    ptr = new Instruction(Instruction.InsType.getelementptr, name, ValueType.I32.getPointType(), ptr, new Value(0, true), y);
                     ptr.getEleType = var.addr.type.pointTo;
                     curBlock.addInstruction(ptr);
 
@@ -833,13 +1141,6 @@ public class Visitor {
             case CONST_VAR:
                 return new Value(var.integerLiteral, true);
             case CONST_ARRAY:
-                x = visitConstAddExp(lVal.exp1.addExp);
-                if (lVal.exp2 == null) {
-                    return new Value(var.getVar(x).integerLiteral, true);
-                } else {
-                    y = visitConstAddExp(lVal.exp2.addExp);
-                    return new Value(var.getVar(x, y).integerLiteral, true);
-                }
             default:
                 throw new RuntimeException("Unknown type: " + var.type);
         }
