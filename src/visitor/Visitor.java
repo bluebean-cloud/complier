@@ -1084,7 +1084,7 @@ public class Visitor {
                 if (lVal.exp1 == null) {    // 返回数字或数组地址
                     ValueType ptrType = new ValueType(ValueType.Type.POINTER);
                     ptrType.pointTo = var.addr.type.pointTo.elementType;    // 什么歃畀的疯狂指
-                    ptr = new Instruction(Instruction.InsType.load, name, ValueType.I32, var.addr);
+                    ptr = new Instruction(Instruction.InsType.load, name, var.addr.type.pointTo, var.addr);
                     curBlock.addInstruction(ptr);
                     return ptr;
                 } else if (lVal.exp2 == null) {    // 寻址一次，可能寻址到地址
