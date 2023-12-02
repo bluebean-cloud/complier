@@ -9,6 +9,9 @@ public class UnaryExp implements SyntaxTreeNode {
     public FuncRParams funcRParams;
     public UnaryOp unaryOp;
     public UnaryExp unaryExp;
+
+    public boolean isConst;
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

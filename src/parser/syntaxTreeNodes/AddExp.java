@@ -8,6 +8,8 @@ public class AddExp implements SyntaxTreeNode {
     public ArrayList<MulExp> mulExps = new ArrayList<>();
     public ArrayList<Token> ops = new ArrayList<>();
 
+    public boolean isConst;
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

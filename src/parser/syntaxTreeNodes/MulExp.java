@@ -7,6 +7,9 @@ import java.util.ArrayList;
 public class MulExp implements SyntaxTreeNode {
     public ArrayList<UnaryExp> unaryExps = new ArrayList<>();
     public ArrayList<Token> ops = new ArrayList<>();    // * / %
+
+    public boolean isConst;
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

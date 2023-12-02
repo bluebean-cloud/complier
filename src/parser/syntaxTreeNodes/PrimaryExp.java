@@ -7,6 +7,9 @@ public class PrimaryExp implements SyntaxTreeNode{
     public Exp exp;
     public LVal lVal;
     public Number number;
+
+    public boolean isConst;
+
     @Override
     public String printSyntaxTree() {
         StringBuilder stringBuilder = new StringBuilder();

@@ -636,7 +636,6 @@ public class Visitor {
                 Manager.MANAGER.addGlobalVar(constDef.getName(), globalVar);
 
             } else {
-                mirVar = new MirVar(MirVar.Type.LOCAL_ARRAY, constDef.getName());
                 String name = "%" + constDef.getName() + "_" + curFunction.cnt;
                 curFunction.cnt++;
                 ValueType type = new ValueType(ValueType.Type.POINTER);
@@ -644,6 +643,7 @@ public class Visitor {
                 ValueType type2 = new ValueType(ValueType.Type.ARRAY);
                 Instruction allocAddr;
                 mirVar = new MirVar(MirVar.Type.LOCAL_ARRAY, constDef.getName());
+                mirVar.compoundLiteral = visitConstInitVals(constDef.constInitVal.constInitVals);
                 if (constDef.constExp2 == null) {
                     type.pointTo = type1;
                     type1.elementType = ValueType.I32;
@@ -883,7 +883,97 @@ public class Visitor {
     }
 
     private Value visitExp(Exp exp) {    // 每个 Exp 最后都应该能用一个 Value 表示出来
+        if (exp.isConst) {
+            return new Value(getConstExpValue(exp), true);
+        }
         return visitAddExp(exp.addExp);
+    }
+
+    private int getConstExpValue(SyntaxTreeNode node) {
+        int tem;
+        if (node instanceof Exp) {
+            return getConstExpValue(((Exp) node).addExp);
+        } else if (node instanceof AddExp) {
+            tem = getConstExpValue(((AddExp) node).mulExps.get(0));
+            for (int i = 0; i < ((AddExp) node).ops.size(); i++) {
+                switch (((AddExp) node).ops.get(i).tokenType) {
+                    case PLUS:
+                        tem += getConstExpValue(((AddExp) node).mulExps.get(i + 1));
+                        break;
+                    case MINU:
+                        tem -= getConstExpValue(((AddExp) node).mulExps.get(i + 1));
+                        break;
+                }
+            }
+            return tem;
+        } else if (node instanceof MulExp) {
+            tem = getConstExpValue(((MulExp) node).unaryExps.get(0));
+            for (int i = 0; i < ((MulExp) node).ops.size(); i++) {
+                switch (((MulExp) node).ops.get(i).tokenType) {
+                    case MULT:
+                        tem *= getConstExpValue(((MulExp) node).unaryExps.get(i + 1));
+                        break;
+                    case DIV:
+                        tem /= getConstExpValue(((MulExp) node).unaryExps.get(i + 1));
+                        break;
+                    case MOD:
+                        tem %= getConstExpValue(((MulExp) node).unaryExps.get(i + 1));
+                        break;
+                }
+            }
+            return tem;
+        } else if (node instanceof UnaryExp) {
+            switch (((UnaryExp) node).type) {
+                case UnaryOp:
+                    switch (((UnaryExp) node).unaryOp.op.tokenType) {
+                        case PLUS:
+                            tem = getConstExpValue(((UnaryExp) node).unaryExp);
+                            break;
+                        case MINU:
+                            tem = -getConstExpValue(((UnaryExp) node).unaryExp);
+                            break;
+                        case NOT:
+                            tem = getConstExpValue(((UnaryExp) node).unaryExp) == 0 ? 1 : 0;
+                            break;
+                        default:
+                            throw new RuntimeException();
+                    }
+                    break;
+                case PrimaryExp:
+                    tem = getConstExpValue(((UnaryExp) node).primaryExp);
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+            return tem;
+        } else if (node instanceof PrimaryExp) {
+            switch (((PrimaryExp) node).type) {
+                case Number:
+                    tem = ((PrimaryExp) node).number.getNumber();
+                    break;
+                case LVal:
+                    tem = getConstExpValue(((PrimaryExp) node).lVal);
+                    break;
+                case Exp:
+                    tem = getConstExpValue(((PrimaryExp) node).exp);
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+            return tem;
+        } else if (node instanceof LVal) {
+            MirVar var = findVarValue(((LVal) node).getName());
+            if (((LVal) node).exp1 == null) {   //
+                tem = var.integerLiteral;
+            } else if (((LVal) node).exp2 == null) {
+                tem = var.getVar(getConstExpValue(((LVal) node).exp1)).integerLiteral;
+            } else {
+                tem = var.getVar(getConstExpValue(((LVal) node).exp1), getConstExpValue(((LVal) node).exp2)).integerLiteral;
+            }
+            return tem;
+        } else {
+            throw new RuntimeException();
+        }
     }
 
     private Value visitAddExp(AddExp addExp) {

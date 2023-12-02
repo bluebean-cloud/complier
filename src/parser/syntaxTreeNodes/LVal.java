@@ -7,6 +7,8 @@ public class LVal implements SyntaxTreeNode{
     public Exp exp1;
     public Exp exp2;
 
+    public boolean isConst;
+
     public String getName() {
         return ident.content;
     }

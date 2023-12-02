@@ -3,6 +3,8 @@ package parser.syntaxTreeNodes;
 public class Exp implements SyntaxTreeNode{
     public AddExp addExp;
 
+    public boolean isConst;
+
     public UnaryExp getFirstUnaryExp() {
         return addExp.mulExps.get(0).unaryExps.get(0);
     }

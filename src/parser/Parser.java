@@ -563,6 +563,7 @@ public class Parser {
     private Exp parseExp() {
         Exp exp = new Exp();
         exp.addExp = parseAddExp();
+        exp.isConst = exp.addExp.isConst;
         return exp;
     }
 
@@ -575,11 +576,15 @@ public class Parser {
     private LVal parseLVal() {
         LVal lVal = new LVal();
         checkUndefined(Lexer.LEXER.peek(), Lexer.LEXER.curLine());
+        lVal.isConst = isConstLVal(Lexer.LEXER.peek());
         lVal.ident = Lexer.LEXER.peek();
         Lexer.LEXER.next();
         if (Judge.isOf(Lexer.LEXER.curContent(), "[")) {
             Lexer.LEXER.next("[");
             lVal.exp1 = parseExp();
+            if (!lVal.exp1.isConst) {
+                lVal.isConst = false;
+            }
             try {
                 Lexer.LEXER.next("]");
             } catch (RuntimeException e) {
@@ -591,6 +596,9 @@ public class Parser {
         if (Judge.isOf(Lexer.LEXER.curContent(), "[")) {
             Lexer.LEXER.next("[");
             lVal.exp2 = parseExp();
+            if (!lVal.exp2.isConst) {
+                lVal.isConst = false;
+            }
             try {
                 Lexer.LEXER.next("]");
             } catch (RuntimeException e) {
@@ -609,15 +617,18 @@ public class Parser {
             Lexer.LEXER.next("(");
             primaryExp.exp = parseExp();
             Lexer.LEXER.next(")");
+            primaryExp.isConst = primaryExp.exp.isConst;
             return primaryExp;
         }
         if (Lexer.LEXER.peek().tokenType.equals(TokenType.INTCON)) {
             primaryExp.type = SyntaxType.Number;
             primaryExp.number = parseNumber();
+            primaryExp.isConst = true;
             return primaryExp;
         } else {
             primaryExp.type = SyntaxType.LVal;
             primaryExp.lVal = parseLVal();
+            primaryExp.isConst = primaryExp.lVal.isConst;
             return primaryExp;
         }
     }
@@ -635,6 +646,7 @@ public class Parser {
             unaryExp.type = SyntaxType.UnaryOp;
             unaryExp.unaryOp = parseUnaryOp();
             unaryExp.unaryExp = parseUnaryExp();
+            unaryExp.isConst = unaryExp.unaryExp.isConst;
             return unaryExp;
         }
         if (Lexer.LEXER.peek().tokenType.equals(TokenType.IDENFR) && Lexer.LEXER.preView(1).content.equals("(")) {
@@ -658,10 +670,12 @@ public class Parser {
                     ErrorLog.ERROR_LOGS.addErrorLog(Lexer.LEXER.preView(-1).line, "j");
                 }
             }
+            unaryExp.isConst = false;
             return unaryExp;
         } else {
             unaryExp.type = SyntaxType.PrimaryExp;
             unaryExp.primaryExp = parsePrimaryExp();
+            unaryExp.isConst = unaryExp.primaryExp.isConst;
             return unaryExp;
         }
     }
@@ -686,10 +700,15 @@ public class Parser {
     private MulExp parseMulExp() {
         MulExp mulExp = new MulExp();
         mulExp.unaryExps.add(parseUnaryExp());
+        mulExp.isConst = mulExp.unaryExps.get(0).isConst;
         while (Judge.isOf(Lexer.LEXER.curContent(), "*", "/", "%")) {
             mulExp.ops.add(Lexer.LEXER.peek());
             Lexer.LEXER.next();
-            mulExp.unaryExps.add(parseUnaryExp());
+            UnaryExp unaryExp = parseUnaryExp();
+            mulExp.unaryExps.add(unaryExp);
+            if (!unaryExp.isConst) {
+                mulExp.isConst = false;
+            }
         }
         return mulExp;
     }
@@ -697,10 +716,15 @@ public class Parser {
     private AddExp parseAddExp() {
         AddExp addExp = new AddExp();
         addExp.mulExps.add(parseMulExp());
+        addExp.isConst = addExp.mulExps.get(0).isConst;
         while (Judge.isOf(Lexer.LEXER.curContent(), "+", "-")) {
             addExp.ops.add(Lexer.LEXER.peek());
             Lexer.LEXER.next();
-            addExp.mulExps.add(parseMulExp());
+            MulExp mulExp = parseMulExp();
+            addExp.mulExps.add(mulExp);
+            if (!mulExp.isConst) {
+                addExp.isConst = false;
+            }
         }
         return addExp;
     }
@@ -776,6 +800,25 @@ public class Parser {
             }
         }
         return true;
+    }
+
+    private boolean isConstLVal(Token token) {
+        String name = token.content;
+        Scope temScope = curScope;
+        while (temScope != null) {
+            for (ConstDef constDef: temScope.constDefs) {
+                if (name.equals(constDef.getName())) {
+                    return true;
+                }
+            }
+            for (VarDef varDef: temScope.varDefs) {
+                if (name.equals(varDef.getName())) {
+                    return false;
+                }
+            }
+            temScope = temScope.parent;
+        }
+        return false;
     }
 
     private void checkUndefined(Token token, int line) {
