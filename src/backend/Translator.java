@@ -402,6 +402,9 @@ public class Translator {
     }
 
     private void transStore(Instruction instruction) {
+        if (curFunction.isParam(instruction.values.get(0).name)) {
+            return; // 函数形参已经压过栈了
+        }
         Value value = instruction.values.get(0);
         Value storeTo = instruction.values.get(1);
         if (storeTo.name.charAt(0) == '@') {
@@ -415,19 +418,84 @@ public class Translator {
             }
         } else {
             if (storeTo.virtualReg != null) {
-                addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, value.virtualReg, storeTo.virtualReg, 0));
+                if (value.isConst) {
+                    VirtualReg temVirtualReg = new VirtualReg();
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg, value.constValue));
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, temVirtualReg, storeTo.virtualReg, 0));
+                } else {
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, value.virtualReg, storeTo.virtualReg, 0));
+                }
             } else {
                 int offset = getVarOffset(storeTo.name);
                 virtualReg1 = new VirtualReg();
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg1, PhysicalReg.SP, offset));
-                addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, value.virtualReg, virtualReg1, 0));
+                if (value.isConst) {
+                    VirtualReg temVirtualReg = new VirtualReg();
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg, value.constValue));
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, temVirtualReg, virtualReg1, 0));
+                } else {
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, value.virtualReg, virtualReg1, 0));
+                }
                 virtualReg1 = null;
             }
         }
     }
 
     private void transGetElementPtr(Instruction instruction) {
-
+        VirtualReg temVirtualReg1 = new VirtualReg();
+        instruction.setVirtualReg(temVirtualReg1);
+        VirtualReg temVirtualReg2;
+        Value base = instruction.values.get(0);
+        ValueType valueType = instruction.getEleType.pointTo;
+        if (base.name.charAt(0) == '@') { // 全局变量
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, temVirtualReg1, base.name));
+            for (int i = 2; i < instruction.values.size(); i++) {
+                if (instruction.values.get(i).isConst) {
+                    temVirtualReg2 = new VirtualReg();
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg2, instruction.values.get(i).constValue));
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, temVirtualReg2, valueType.elementType.size * 4));
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
+                } else {
+                    temVirtualReg2 = new VirtualReg();
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, instruction.values.get(i).virtualReg, valueType.elementType.size * 4));
+                    addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
+                }
+                valueType = valueType.elementType;
+            }
+        } else {    // 局部变量
+            if (base.virtualReg == null) {  // 存在于栈中
+                int offset = getVarOffset(base.name);
+                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg1, PhysicalReg.SP, offset));
+                for (int i = 2; i < instruction.values.size(); i++) {
+                    if (instruction.values.get(i).isConst) {
+                        temVirtualReg2 = new VirtualReg();
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg2, instruction.values.get(i).constValue));
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, temVirtualReg2, valueType.elementType.size * 4));
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
+                    } else {
+                        temVirtualReg2 = new VirtualReg();
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, instruction.values.get(i).virtualReg, valueType.elementType.size * 4));
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
+                    }
+                    valueType = valueType.elementType;
+                }
+            } else {
+                temVirtualReg1 = base.virtualReg;
+                for (int i = 2; i < instruction.values.size(); i++) {
+                    if (instruction.values.get(i).isConst) {
+                        temVirtualReg2 = new VirtualReg();
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg2, instruction.values.get(i).constValue));
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, temVirtualReg2, valueType.elementType.size * 4));
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
+                    } else {
+                        temVirtualReg2 = new VirtualReg();
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, instruction.values.get(i).virtualReg, valueType.elementType.size * 4));
+                        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
+                    }
+                    valueType = valueType.elementType;
+                }
+            }
+        }
     }
 
 }

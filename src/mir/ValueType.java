@@ -4,7 +4,7 @@ public class ValueType {
     Type type;
     public ValueType pointTo;
     public ValueType elementType;
-    public int size;
+    public int size = 1;
 
     public static final ValueType I32 = new ValueType(Type.I32);
     public static final ValueType I1 = new ValueType(Type.I1);

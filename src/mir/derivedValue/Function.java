@@ -13,6 +13,15 @@ public class Function extends Value {
     public int cnt = 0;
     public ValueType retType;
 
+    public boolean isParam(String name) {
+        for (Value value: params) {
+            if (value.name.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Function(ValueType type, String name) {
         super(type, name);
     }
