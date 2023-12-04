@@ -33,6 +33,14 @@ public class ValueType {
         }
     }
 
+    public int getTypeSize() {
+        if (type.equals(Type.ARRAY)) {
+            return 4 * getArraySize();
+        } else {
+            return 4;
+        }
+    }
+
     public boolean isVoid() {
         return type.equals(Type.VOID);
     }

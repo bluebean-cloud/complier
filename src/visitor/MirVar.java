@@ -90,4 +90,21 @@ public class MirVar {
         return stringBuilder.toString();
     }
 
+    public String printIntegerLiterals() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (integerLiteral == null) {
+            if (useZeroInit) {
+                stringBuilder.append("0");
+                return stringBuilder.toString();
+            }
+            stringBuilder.append(compoundLiteral.get(0).printIntegerLiterals());
+            for (int i = 1; i < compoundLiteral.size(); i++) {
+                stringBuilder.append(",").append(compoundLiteral.get(i).printIntegerLiterals());
+            }
+        } else {
+            stringBuilder.append(integerLiteral);
+        }
+        return stringBuilder.toString();
+    }
+
 }

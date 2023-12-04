@@ -2,7 +2,7 @@ package backend;
 
 public class PhysicalReg {
 
-    public Name name;
+    public final Name name;
     public PhysicalReg(Name name) {
         this.name = name;
     }
@@ -10,6 +10,22 @@ public class PhysicalReg {
     public static final PhysicalReg SP = new PhysicalReg(Name.SP);
     public static final PhysicalReg RA = new PhysicalReg(Name.RA);
     public static final PhysicalReg V0 = new PhysicalReg(Name.V0);
+    public static final PhysicalReg T1 = new PhysicalReg(Name.T1);
+    public static final PhysicalReg T2 = new PhysicalReg(Name.T2);
+    public static final PhysicalReg T3 = new PhysicalReg(Name.T3);
+    public static final PhysicalReg T4 = new PhysicalReg(Name.T4);
+    public static final PhysicalReg T5 = new PhysicalReg(Name.T5);
+    public static final PhysicalReg T6 = new PhysicalReg(Name.T6);
+    public static final PhysicalReg T7 = new PhysicalReg(Name.T7);
+    public static final PhysicalReg T8 = new PhysicalReg(Name.T8);
+    public static final PhysicalReg T9 = new PhysicalReg(Name.T9);
+    public static final PhysicalReg S1 = new PhysicalReg(Name.S1);
+    public static final PhysicalReg S2 = new PhysicalReg(Name.S2);
+    public static final PhysicalReg S3 = new PhysicalReg(Name.S3);
+    public static final PhysicalReg S4 = new PhysicalReg(Name.S4);
+    public static final PhysicalReg S5 = new PhysicalReg(Name.S5);
+    public static final PhysicalReg S6 = new PhysicalReg(Name.S6);
+    public static final PhysicalReg S7 = new PhysicalReg(Name.S7);
 
 
     public enum Name {
@@ -30,4 +46,16 @@ public class PhysicalReg {
         }
     }
 
+    @Override
+    public int hashCode() {
+        return name.toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof PhysicalReg) {
+            return name == ((PhysicalReg) obj).name;
+        }
+        return false;
+    }
 }

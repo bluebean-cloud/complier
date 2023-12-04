@@ -8,47 +8,62 @@ import mir.derivedValue.BasicBlock;
 import mir.derivedValue.Function;
 import mir.derivedValue.GlobalVar;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Translator {
     private Translator() {}
     public static final Translator TRANSLATOR = new Translator();
-    private ArrayList<MIPSInstruction> instructions = new ArrayList<>();
+    public ArrayList<MIPSInstruction> instructions = new ArrayList<>();
     Manager MANAGER = Manager.MANAGER;
-    public HashMap<String, GlobalVar> globalVars;
     private final HashMap<String, Integer> varOffset = new HashMap<>();
     int sum = 0;
     public int getVarOffset(String name) {
         return sum - varOffset.get(name);
     }
 
-    public GlobalVar getGlobalVar(String name) {
-        return globalVars.get(name);
-    }
+    LFunction curLFunction;
 
     public void addInstruction(MIPSInstruction mipsInstruction) {
         instructions.add(mipsInstruction);
+        curLFunction.instructions.add(mipsInstruction);
     }
 
     public void run() {
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.PSEUDO, ".data"));
-        allocGlobalMemory();
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.PSEUDO, ".text"));
+        // addInstruction(new MIPSInstruction(MIPSInstruction.Type.PSEUDO, ".data"));
+        // addInstruction(new MIPSInstruction(MIPSInstruction.Type.PSEUDO, ".text"));
         for (Function function: MANAGER.functions) {
             curFunction = function;
             transFunction();
         }
+        RegAlloca.REG_ALLOCA.run();
     }
 
-    private void allocGlobalMemory() {
-        globalVars = MANAGER.globalVars;
-    }
+    public void printCodes() throws FileNotFoundException {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(".data\n");
+        for (GlobalVar globalVar: MANAGER.globalVars.values()) {
+            stringBuilder.append(globalVar.name.substring(1)).append(": ");
+            if (globalVar.mirVar.useZeroInit) {
+                stringBuilder.append(".space ").append(globalVar.type.pointTo.getTypeSize()).append('\n');
+            } else {
+                stringBuilder.append(".word ").append(globalVar.mirVar.printIntegerLiterals()).append('\n');
+            }
+        }
+        stringBuilder.append(".text\n");
 
+        try (PrintWriter output = new PrintWriter("mips.txt")) {
+            output.println(stringBuilder);
+        }
+    }
 
     Function curFunction;
     BasicBlock curBlock;
     private void transFunction() {
+        curLFunction = new LFunction();
+
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.beginName()));
         sum = 0;
         varOffset.clear();
@@ -57,8 +72,9 @@ public class Translator {
             varOffset.put(decl.name, sum + size);
             sum += size;
         }
+        curLFunction.stacksum = sum;
         // 分配栈空间。函数参数在调用时已经分配好，故减去
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -(sum - curFunction.params.size() * 4)));
+        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -(sum - curFunction.params.size() * 4), true));
 
         for (BasicBlock block: curFunction.blocks) {
             curBlock = block;
@@ -138,6 +154,7 @@ public class Translator {
 
     private void prepareForCal(Instruction instruction, String op) {
         virtualReg = new VirtualReg();
+        curLFunction.addVirtualReg(virtualReg);
         instruction.setVirtualReg(virtualReg);
         if (instruction.isValuesConst()) {
             int a = instruction.values.get(0).constValue;
@@ -229,6 +246,7 @@ public class Translator {
 
     private void transICmp(Instruction instruction) {
         virtualReg = new VirtualReg();
+        curLFunction.addVirtualReg(virtualReg);
         instruction.setVirtualReg(virtualReg);
         if (instruction.isConst) {
             int a = instruction.values.get(0).constValue;
@@ -333,6 +351,7 @@ public class Translator {
         for (Value param: instruction.values) {
             if (param.isConst) {
                 VirtualReg temReg = new VirtualReg();
+                curLFunction.addVirtualReg(temReg);
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temReg, param.constValue));
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, temReg, PhysicalReg.SP, 0));
@@ -349,6 +368,7 @@ public class Translator {
         // 获取返回值
         if (!function.retType.equals(ValueType.VOID)) {
             virtualReg = new VirtualReg();
+            curLFunction.addVirtualReg(virtualReg);
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, virtualReg, PhysicalReg.V0, 0)); // 这是一条 move 指令
             instruction.virtualReg = virtualReg;
         }
@@ -382,6 +402,7 @@ public class Translator {
 
     private void transLoad(Instruction instruction) {
         virtualReg = new VirtualReg();
+        curLFunction.addVirtualReg(virtualReg);
         instruction.setVirtualReg(virtualReg);
         Value from = instruction.values.get(0);
         if (from.name.charAt(0) == '@') {   // 全局变量
@@ -393,8 +414,9 @@ public class Translator {
             } else {
                 int offset = getVarOffset(from.name);
                 virtualReg1 = new VirtualReg();
+                curLFunction.addVirtualReg(virtualReg1);
                 instruction.setVirtualReg(virtualReg1);
-                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg, PhysicalReg.SP, offset));
+                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg, PhysicalReg.SP, offset, true));
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, virtualReg1, virtualReg, 0));
                 virtualReg1 = null;
             }
@@ -411,6 +433,7 @@ public class Translator {
             String name = storeTo.name.substring(1);
             if (value.isConst) {
                 VirtualReg temVirtualReg = new VirtualReg();
+                curLFunction.addVirtualReg(temVirtualReg);
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg, value.constValue));
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, temVirtualReg, name));
             } else {
@@ -420,6 +443,7 @@ public class Translator {
             if (storeTo.virtualReg != null) {
                 if (value.isConst) {
                     VirtualReg temVirtualReg = new VirtualReg();
+                    curLFunction.addVirtualReg(temVirtualReg);
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg, value.constValue));
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, temVirtualReg, storeTo.virtualReg, 0));
                 } else {
@@ -428,9 +452,11 @@ public class Translator {
             } else {
                 int offset = getVarOffset(storeTo.name);
                 virtualReg1 = new VirtualReg();
-                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg1, PhysicalReg.SP, offset));
+                curLFunction.addVirtualReg(virtualReg1);
+                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg1, PhysicalReg.SP, offset, true));
                 if (value.isConst) {
                     VirtualReg temVirtualReg = new VirtualReg();
+                    curLFunction.addVirtualReg(temVirtualReg);
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg, value.constValue));
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, temVirtualReg, virtualReg1, 0));
                 } else {
@@ -443,6 +469,7 @@ public class Translator {
 
     private void transGetElementPtr(Instruction instruction) {
         VirtualReg temVirtualReg1 = new VirtualReg();
+        curLFunction.addVirtualReg(temVirtualReg1);
         instruction.setVirtualReg(temVirtualReg1);
         VirtualReg temVirtualReg2;
         Value base = instruction.values.get(0);
@@ -452,11 +479,13 @@ public class Translator {
             for (int i = 2; i < instruction.values.size(); i++) {
                 if (instruction.values.get(i).isConst) {
                     temVirtualReg2 = new VirtualReg();
+                    curLFunction.addVirtualReg(temVirtualReg2);
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg2, instruction.values.get(i).constValue));
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, temVirtualReg2, valueType.elementType.size * 4));
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
                 } else {
                     temVirtualReg2 = new VirtualReg();
+                    curLFunction.addVirtualReg(temVirtualReg2);
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, instruction.values.get(i).virtualReg, valueType.elementType.size * 4));
                     addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
                 }
@@ -465,15 +494,17 @@ public class Translator {
         } else {    // 局部变量
             if (base.virtualReg == null) {  // 存在于栈中
                 int offset = getVarOffset(base.name);
-                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg1, PhysicalReg.SP, offset));
+                addInstruction(new MIPSInstruction(MIPSInstruction.Type.LA, virtualReg1, PhysicalReg.SP, offset, true));
                 for (int i = 2; i < instruction.values.size(); i++) {
                     if (instruction.values.get(i).isConst) {
                         temVirtualReg2 = new VirtualReg();
+                        curLFunction.addVirtualReg(temVirtualReg2);
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg2, instruction.values.get(i).constValue));
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, temVirtualReg2, valueType.elementType.size * 4));
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
                     } else {
                         temVirtualReg2 = new VirtualReg();
+                        curLFunction.addVirtualReg(temVirtualReg2);
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, instruction.values.get(i).virtualReg, valueType.elementType.size * 4));
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
                     }
@@ -484,11 +515,13 @@ public class Translator {
                 for (int i = 2; i < instruction.values.size(); i++) {
                     if (instruction.values.get(i).isConst) {
                         temVirtualReg2 = new VirtualReg();
+                        curLFunction.addVirtualReg(temVirtualReg2);
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, temVirtualReg2, instruction.values.get(i).constValue));
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, temVirtualReg2, valueType.elementType.size * 4));
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
                     } else {
                         temVirtualReg2 = new VirtualReg();
+                        curLFunction.addVirtualReg(temVirtualReg2);
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, temVirtualReg2, instruction.values.get(i).virtualReg, valueType.elementType.size * 4));
                         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, temVirtualReg1, temVirtualReg1, temVirtualReg2));
                     }

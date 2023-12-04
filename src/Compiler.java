@@ -1,3 +1,4 @@
+import backend.Translator;
 import lexer.Lexer;
 import mir.Manager;
 import parser.Parser;
@@ -27,6 +28,8 @@ public class Compiler {
             try (PrintWriter llvm = new PrintWriter("llvm_ir.txt")) {
                 llvm.print(Manager.MANAGER.printCodes());
             }
+            Translator.TRANSLATOR.run();
+            Translator.TRANSLATOR.printCodes();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

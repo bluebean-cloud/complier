@@ -10,7 +10,9 @@ public class MIPSInstruction {
     public PhysicalReg physicalReg2;
     public PhysicalReg physicalReg3;
     public Integer imm;
+    public DynamicInt dynamicInt;
     boolean isAlloc;
+    boolean needReallocStack;
 
     public MIPSInstruction(Type type, String label) {
         this.label = label;
@@ -23,6 +25,15 @@ public class MIPSInstruction {
         this.physicalReg2 = physicalReg2;
         this.imm = imm;
         isAlloc = false;
+    }
+
+    public MIPSInstruction(Type type, VirtualReg virtualReg1, PhysicalReg physicalReg2, Integer imm, boolean needReallocStack) {
+        this.type = type;
+        this.virtualReg1 = virtualReg1;
+        this.physicalReg2 = physicalReg2;
+        this.imm = imm;
+        isAlloc = false;
+        this.needReallocStack = needReallocStack;
     }
 
     public MIPSInstruction(Type type, PhysicalReg physicalReg1, VirtualReg virtualReg2, Integer imm) {
@@ -75,6 +86,15 @@ public class MIPSInstruction {
         isAlloc = true;
     }
 
+    public MIPSInstruction(Type type, PhysicalReg physicalReg1, PhysicalReg physicalReg2, Integer imm, boolean needReallocStack) {
+        this.type = type;
+        this.physicalReg1 = physicalReg1;
+        this.physicalReg2 = physicalReg2;
+        this.imm = imm;
+        this.needReallocStack = needReallocStack;
+        isAlloc = true;
+    }
+
     public MIPSInstruction(Type type, PhysicalReg physicalReg1, PhysicalReg physicalReg2, PhysicalReg physicalReg3) {
         this.type = type;
         this.physicalReg1 = physicalReg1;
@@ -88,6 +108,27 @@ public class MIPSInstruction {
         this.physicalReg1 = physicalReg1;
         this.imm = imm;
         isAlloc = true;
+    }
+
+    public void updateLiveInterVal(int i) {
+        if (virtualReg1 != null) {
+            if (virtualReg1.lifeBeign == 0) {
+                virtualReg1.lifeBeign = i;
+            }
+            virtualReg1.lifeEnd = i;
+        }
+        if (virtualReg2 != null) {
+            if (virtualReg2.lifeBeign == 0) {
+                virtualReg2.lifeBeign = i;
+            }
+            virtualReg2.lifeEnd = i;
+        }
+        if (virtualReg3 != null) {
+            if (virtualReg3.lifeBeign == 0) {
+                virtualReg3.lifeBeign = i;
+            }
+            virtualReg3.lifeEnd = i;
+        }
     }
 
     public boolean isAlloc() {
