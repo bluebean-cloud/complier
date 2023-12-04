@@ -7,9 +7,9 @@ import mir.ValueType;
 import java.util.ArrayList;
 
 public class Function extends Value {
-    private ArrayList<BasicBlock> blocks = new ArrayList<>();
+    public ArrayList<BasicBlock> blocks = new ArrayList<>();
     public ArrayList<Value> params = new ArrayList<>();
-    private ArrayList<Instruction> decls = new ArrayList<>();
+    public ArrayList<Instruction> decls = new ArrayList<>();
     public int cnt = 0;
     public ValueType retType;
 
@@ -27,6 +27,14 @@ public class Function extends Value {
 
     public void addParam(Value param) {
         params.add(param);
+    }
+
+    public String beginName() {
+        return name.substring(1);
+    }
+
+    public String endName() {
+        return beginName() + "_end";
     }
 
     public String printCodes() {

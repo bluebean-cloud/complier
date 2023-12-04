@@ -23,7 +23,9 @@ public class Manager {
     }
 
     public Function findFunction(String name) {
-        name = "@" + name;
+        if (name.charAt(0) != '@') {
+            name = '@' + name;
+        }
         for (Function function: functions) {
             if (name.equals(function.name)) {
                 return function;

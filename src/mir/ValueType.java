@@ -14,6 +14,25 @@ public class ValueType {
     public static final ValueType BLOCK = new ValueType(Type.BLOCK);
     public static final ValueType FUNCTION = new ValueType(Type.FUNCTION);
 
+    public int getPointToByte() {
+        if (pointTo == null) {
+            throw new RuntimeException();
+        }
+        if (pointTo.type.equals(Type.ARRAY)) {
+            return 4 * pointTo.getArraySize();
+        } else {
+            return 4;
+        }
+    }
+
+    private int getArraySize() {
+        if (elementType.isI32()) {
+            return size;
+        } else {
+            return size * elementType.getArraySize();
+        }
+    }
+
     public boolean isVoid() {
         return type.equals(Type.VOID);
     }

@@ -30,6 +30,15 @@ public class Instruction extends Value {
         }
     }
 
+    public boolean isValuesConst() {
+        for (Value value: values) {
+            if (!value.isConst) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder("  ");
         boolean first = true;
