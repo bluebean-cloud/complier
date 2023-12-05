@@ -16,8 +16,7 @@ public class RegAlloca {
     public void addVirtualReg(VirtualReg virtualReg) {
         virtualRegs.add(virtualReg);
     }
-
-
+    
     public void run() {
         int cnt = 0;
         for (MIPSInstruction instruction: Translator.TRANSLATOR.instructions) {
@@ -49,72 +48,7 @@ public class RegAlloca {
                 busyPhysicalReg.add(curVirtualReg.physicalReg);
             }
             active.add(curVirtualReg);
-
         }
-//        ArrayList<MIPSInstruction> instructions = Translator.TRANSLATOR.instructions;
-//        for (int i = 0; i < instructions.size(); i++) {
-//            MIPSInstruction instruction = Translator.TRANSLATOR.instructions.get(i);
-//            ArrayList<VirtualReg> needSave = new ArrayList<>();
-//            if (instruction.type.equals(MIPSInstruction.Type.JAL)) {
-//                LFunction function = Translator.TRANSLATOR.findLFunction(instruction.label);
-//                boolean saveA = false;
-//                for (VirtualReg virtualReg: virtualRegs) {
-//                    if (virtualReg.lifeBeign < i && virtualReg.lifeEnd > i) {
-//                        if (virtualReg.spill) {
-//                            saveA = true;
-//                        } else {
-//                            needSave.add(virtualReg);
-//                        }
-//                    }
-//                }
-//                i--;
-//                if (saveA) {
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A0, PhysicalReg.SP, 0));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A1, PhysicalReg.SP, 0));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A2, PhysicalReg.SP, 0));
-//                    i++;
-//                    function.spillNumber += 3;
-//                }
-//                for (VirtualReg virtualReg: needSave) {
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-//                    i ++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.SW, virtualReg.physicalReg, PhysicalReg.SP, 0));
-//                    i += 2;
-//                    function.spillNumber++;
-//                }
-//                i++;
-//
-//                for (int j = needSave.size() - 1; j >= 0; j--) {
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.LW, virtualRegs.get(j).physicalReg, PhysicalReg.SP, 0));
-//                    i ++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-//                    i += 2;
-//                }
-//                if (saveA) {
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A2, PhysicalReg.SP, 0));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A1, PhysicalReg.SP, 0));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A0, PhysicalReg.SP, 0));
-//                    i++;
-//                    instructions.add(i, new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-//                    i++;
-//                }
-//            }
-//        }
-
     }
 
     private void regInit() {

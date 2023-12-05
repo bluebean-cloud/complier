@@ -183,9 +183,9 @@ public class Translator {
             varOffset.put(decl.name, sum + size);
             sum += size;
         }
-        saveRegs();
         // 分配栈空间。函数参数在调用时已经分配好，故减去
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -(sum - curFunction.params.size() * 4), true, -1));
+        saveRegs();
 
         for (BasicBlock block: curFunction.blocks) {
             curBlock = block;
@@ -329,8 +329,29 @@ public class Translator {
     }
 
     private void transSub(Instruction instruction) {
-        if (prepareForCal(instruction, "-")) {
+        virtualReg = new VirtualReg();
+        curLFunction.addVirtualReg(virtualReg);
+        instruction.setVirtualReg(virtualReg);
+        if (instruction.isValuesConst()) {
+            int a = instruction.values.get(0).constValue;
+            int b = instruction.values.get(1).constValue;
+            imm = a - b;
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg, imm));
             return;
+        }
+        virtualReg1 = null;
+        virtualReg2 = null;
+        imm = null;
+        if (!instruction.values.get(0).isConst) {
+            virtualReg1 = instruction.values.get(0).virtualReg;
+        } else {
+            virtualReg1 = new VirtualReg();
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg1, instruction.values.get(0).constValue));
+        }
+        if (!instruction.values.get(1).isConst) {
+            virtualReg2 = instruction.values.get(1).virtualReg;
+        } else {
+            imm = instruction.values.get(1).constValue;
         }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.SUBU, virtualReg, virtualReg1, virtualReg2));
@@ -351,8 +372,29 @@ public class Translator {
     }
 
     private void transDiv(Instruction instruction) {
-        if (prepareForCal(instruction, "/")) {
+        virtualReg = new VirtualReg();
+        curLFunction.addVirtualReg(virtualReg);
+        instruction.setVirtualReg(virtualReg);
+        if (instruction.isValuesConst()) {
+            int a = instruction.values.get(0).constValue;
+            int b = instruction.values.get(1).constValue;
+            imm = a / b;
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg, imm));
             return;
+        }
+        virtualReg1 = null;
+        virtualReg2 = null;
+        imm = null;
+        if (!instruction.values.get(0).isConst) {
+            virtualReg1 = instruction.values.get(0).virtualReg;
+        } else {
+            virtualReg1 = new VirtualReg();
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg1, instruction.values.get(0).constValue));
+        }
+        if (!instruction.values.get(1).isConst) {
+            virtualReg2 = instruction.values.get(1).virtualReg;
+        } else {
+            imm = instruction.values.get(1).constValue;
         }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.DIV, virtualReg, virtualReg1, virtualReg2));
@@ -362,8 +404,29 @@ public class Translator {
     }
 
     private void transRem(Instruction instruction) {
-        if (prepareForCal(instruction, "%")) {
+        virtualReg = new VirtualReg();
+        curLFunction.addVirtualReg(virtualReg);
+        instruction.setVirtualReg(virtualReg);
+        if (instruction.isValuesConst()) {
+            int a = instruction.values.get(0).constValue;
+            int b = instruction.values.get(1).constValue;
+            imm = a % b;
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg, imm));
             return;
+        }
+        virtualReg1 = null;
+        virtualReg2 = null;
+        imm = null;
+        if (!instruction.values.get(0).isConst) {
+            virtualReg1 = instruction.values.get(0).virtualReg;
+        } else {
+            virtualReg1 = new VirtualReg();
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg1, instruction.values.get(0).constValue));
+        }
+        if (!instruction.values.get(1).isConst) {
+            virtualReg2 = instruction.values.get(1).virtualReg;
+        } else {
+            imm = instruction.values.get(1).constValue;
         }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.REM, virtualReg, virtualReg1, virtualReg2));
@@ -409,15 +472,13 @@ public class Translator {
         if (!instruction.values.get(0).isConst) {
             virtualReg1 = instruction.values.get(0).virtualReg;
         } else {
-            imm = instruction.values.get(0).constValue;
+            virtualReg1 = new VirtualReg();
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg1, instruction.values.get(0).constValue));
         }
         if (!instruction.values.get(1).isConst) {
             virtualReg2 = instruction.values.get(1).virtualReg;
         } else {
             imm = instruction.values.get(1).constValue;
-        }
-        if (virtualReg1 == null) {
-            virtualReg1 = virtualReg2;
         }
         switch (instruction.cmpType) {
             case "eq":
