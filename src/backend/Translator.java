@@ -25,6 +25,7 @@ public class Translator {
     }
 
     LFunction curLFunction;
+    private ArrayList<LFunction> lFunctions = new ArrayList<>();
 
     public void addInstruction(MIPSInstruction mipsInstruction) {
         instructions.add(mipsInstruction);
@@ -39,9 +40,13 @@ public class Translator {
             transFunction();
         }
         RegAlloca.REG_ALLOCA.run();
+        for (LFunction lFunction: lFunctions) {
+            lFunction.reAlloc();
+        }
+        printCodes();
     }
 
-    public void printCodes() throws FileNotFoundException {
+    public void printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(".data\n");
         for (GlobalVar globalVar: MANAGER.globalVars.values()) {
@@ -53,9 +58,16 @@ public class Translator {
             }
         }
         stringBuilder.append(".text\n");
+        for (LFunction lFunction: lFunctions) {
+            for (MIPSInstruction instruction: lFunction.instructions) {
+                stringBuilder.append(instruction.printCodes()).append('\n');
+            }
+        }
 
         try (PrintWriter output = new PrintWriter("mips.txt")) {
             output.println(stringBuilder);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -63,7 +75,7 @@ public class Translator {
     BasicBlock curBlock;
     private void transFunction() {
         curLFunction = new LFunction();
-
+        lFunctions.add(curLFunction);
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.beginName()));
         sum = 0;
         varOffset.clear();
@@ -80,11 +92,16 @@ public class Translator {
             curBlock = block;
             transBlock();
         }
-
-        // 结束函数，回收空间
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.endName()));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, sum));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.JR, PhysicalReg.RA));
+        if (curFunction.beginName().equals("main")) {
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.endName()));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 10));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
+        } else {
+            // 结束函数，回收空间
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.endName()));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, sum));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.JR, PhysicalReg.RA));
+        }
     }
 
     private void transBlock() {
@@ -152,7 +169,7 @@ public class Translator {
     VirtualReg virtualReg2;
     Integer imm;
 
-    private void prepareForCal(Instruction instruction, String op) {
+    private boolean prepareForCal(Instruction instruction, String op) {
         virtualReg = new VirtualReg();
         curLFunction.addVirtualReg(virtualReg);
         instruction.setVirtualReg(virtualReg);
@@ -179,7 +196,7 @@ public class Translator {
                     throw new IllegalStateException("Unexpected value: " + op);
             }
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, virtualReg, imm));
-            return;
+            return true;
         }
         virtualReg1 = null;
         virtualReg2 = null;
@@ -197,10 +214,13 @@ public class Translator {
         if (virtualReg1 == null) {
             virtualReg1 = virtualReg2;
         }
+        return false;
     }
 
     private void transAdd(Instruction instruction) {
-        prepareForCal(instruction, "+");
+        if (prepareForCal(instruction, "+")) {
+            return;
+        }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDU, virtualReg, virtualReg1, virtualReg2));
         } else {
@@ -209,7 +229,9 @@ public class Translator {
     }
 
     private void transSub(Instruction instruction) {
-        prepareForCal(instruction, "-");
+        if (prepareForCal(instruction, "-")) {
+            return;
+        }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.SUBU, virtualReg, virtualReg1, virtualReg2));
         } else {
@@ -218,7 +240,9 @@ public class Translator {
     }
 
     private void transMul(Instruction instruction) {
-        prepareForCal(instruction, "*");
+        if (prepareForCal(instruction, "*")) {
+            return;
+        }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.MUL, virtualReg, virtualReg1, virtualReg2));
         } else {
@@ -227,7 +251,9 @@ public class Translator {
     }
 
     private void transDiv(Instruction instruction) {
-        prepareForCal(instruction, "/");
+        if (prepareForCal(instruction, "/")) {
+            return;
+        }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.DIV, virtualReg, virtualReg1, virtualReg2));
         } else {
@@ -236,7 +262,9 @@ public class Translator {
     }
 
     private void transRem(Instruction instruction) {
-        prepareForCal(instruction, "%");
+        if (prepareForCal(instruction, "%")) {
+            return;
+        }
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.REM, virtualReg, virtualReg1, virtualReg2));
         } else {
@@ -248,7 +276,7 @@ public class Translator {
         virtualReg = new VirtualReg();
         curLFunction.addVirtualReg(virtualReg);
         instruction.setVirtualReg(virtualReg);
-        if (instruction.isConst) {
+        if (instruction.isValuesConst()) {
             int a = instruction.values.get(0).constValue;
             int b = instruction.values.get(1).constValue;
             switch (instruction.cmpType) {
@@ -341,6 +369,26 @@ public class Translator {
     }
 
     private void transCall(Instruction instruction) {
+        if (instruction.funcName.equals("@getint")) {
+            virtualReg = new VirtualReg();
+            curLFunction.addVirtualReg(virtualReg);
+            instruction.virtualReg = virtualReg;
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 5));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, virtualReg, PhysicalReg.V0, 0));
+            return;
+        } else if (instruction.funcName.equals("@putch")) {
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 11));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.A0, instruction.values.get(0).constValue));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
+            return;
+        } else if (instruction.funcName.equals("@putint")) {
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 1));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.A0, instruction.values.get(0).constValue));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
+            return;
+        }
+
         // 保存现场，参数压栈，跳转
         // 但是好像不用特意保存现场，因为该保存的都已经保存完了？除了应当保存 $ra
         Function function = MANAGER.findFunction(instruction.funcName);
@@ -387,17 +435,20 @@ public class Translator {
 
     private void transBr(Instruction instruction) {
         if (instruction.values.size() == 1) {
-            addInstruction(new MIPSInstruction(MIPSInstruction.Type.J, instruction.values.get(0).name.substring(1)));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.J,
+                    curFunction.beginName() + '_' + instruction.values.get(0).name.substring(1)));
         } else {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.BNEZ, instruction.values.get(0).virtualReg,
-                    instruction.values.get(1).name.substring(1)));  // 若为真，跳转至第一个 label
+                    curFunction.beginName() + '_' + instruction.values.get(1).name.substring(1)));  // 若为真，跳转至第一个 label
             // 否则跳转至第二个 label
-            addInstruction(new MIPSInstruction(MIPSInstruction.Type.J, instruction.values.get(2).name.substring(1)));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.J,
+                    curFunction.beginName() + '_' + instruction.values.get(2).name.substring(1)));
         }
     }
 
     private void transLabel(Instruction instruction) {
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, instruction.name.substring(1)));
+        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL,
+                curFunction.beginName() + '_' + instruction.name.substring(1)));
     }
 
     private void transLoad(Instruction instruction) {

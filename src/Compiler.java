@@ -29,7 +29,6 @@ public class Compiler {
                 llvm.print(Manager.MANAGER.printCodes());
             }
             Translator.TRANSLATOR.run();
-            Translator.TRANSLATOR.printCodes();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

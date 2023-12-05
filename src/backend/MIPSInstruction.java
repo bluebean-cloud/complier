@@ -15,6 +15,7 @@ public class MIPSInstruction {
     boolean needReallocStack;
 
     public MIPSInstruction(Type type, String label) {
+        this.type = type;
         this.label = label;
         isAlloc = true;
     }
@@ -110,6 +111,10 @@ public class MIPSInstruction {
         isAlloc = true;
     }
 
+    public MIPSInstruction(Type type) {
+        this.type = type;
+    }
+
     public void updateLiveInterVal(int i) {
         if (virtualReg1 != null) {
             if (virtualReg1.lifeBeign == 0) {
@@ -135,57 +140,487 @@ public class MIPSInstruction {
         return isAlloc;
     }
 
-    public MIPSInstruction(Type type) {
-        this.type = type;
+    private String printAddU() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("addu ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ').append(virtualReg3.physicalReg);
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printAddUI() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2 != null) {
+            if (virtualReg2.spill) {
+                stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+                virtualReg2.physicalReg = PhysicalReg.A0;
+            }
+        }
+        stringBuilder.append("addiu ");
+        if (virtualReg1 != null) {
+            if (virtualReg1.spill) {
+                virtualReg1.physicalReg = PhysicalReg.A1;
+            }
+            stringBuilder.append(virtualReg1.physicalReg).append(' ');
+        } else {
+            stringBuilder.append(physicalReg1).append(' ');
+        }
+        if (virtualReg2 != null) {
+            stringBuilder.append(virtualReg2.physicalReg).append(' ');
+        } else {
+            stringBuilder.append(physicalReg2).append(' ');
+        }
+        stringBuilder.append(imm);
+        if (virtualReg1 != null && virtualReg1.spill) {
+            stringBuilder.append("\nsw $a1 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSubU() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("subu ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printMul() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("mul ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printDiv() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("div ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printRem() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("rem ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSLT() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("slt ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        stringBuilder.append(virtualReg3.physicalReg);
+
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSLTI() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("slti ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ').append(imm);
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSLE() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("sle ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSGT() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("sgt ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSGE() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("sge ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSEQ() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("seq ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSNE() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg2.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg3 != null && virtualReg3.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg3.physicalReg = PhysicalReg.A1;
+        }
+        if (virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A2;
+        }
+        stringBuilder.append("sne ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg1.spill) {
+            stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printLi() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg1 != null && virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A0;
+        }
+        stringBuilder.append("li ");
+        if (virtualReg1 != null) {
+            stringBuilder.append(virtualReg1.physicalReg).append(' ');
+        } else {
+            stringBuilder.append(physicalReg1).append(' ');
+        }
+        stringBuilder.append(imm);
+        return stringBuilder.toString();
+    }
+
+    private String printBNEZ() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg1.spill) {
+            stringBuilder.append("lw $a0 ").append(virtualReg1.offset).append("($sp)\n");
+            virtualReg1.physicalReg = PhysicalReg.A0;
+        }
+        stringBuilder.append("bnez ").append(virtualReg1.physicalReg).append(' ').append(label);
+        return stringBuilder.toString();
+    }
+
+    private String printLW() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg1 != null && virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg2 != null && virtualReg2.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A1;
+        }
+        stringBuilder.append("lw ");
+        if (virtualReg1 != null) {
+            stringBuilder.append(virtualReg1.physicalReg).append(' ');
+        } else {
+            stringBuilder.append(physicalReg1).append(' ');
+        }
+        if (imm != null) {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg2 != null) {
+            stringBuilder.append('(').append(virtualReg2.physicalReg).append(')');
+        } else if (physicalReg2 != null) {
+            stringBuilder.append('(').append(physicalReg2).append(')');
+        } else {
+            stringBuilder.append('(').append(label).append(')');
+        }
+        if (virtualReg1 != null && virtualReg1.spill) {
+            stringBuilder.append("\nsw $a0 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printSW() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg1 != null && virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg2 != null && virtualReg2.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A1;
+        }
+        stringBuilder.append("sw ");
+        if (virtualReg1 != null) {
+            stringBuilder.append(virtualReg1.physicalReg).append(' ');
+        } else {
+            stringBuilder.append(physicalReg1).append(' ');
+        }
+        if (imm != null) {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg2 != null) {
+            stringBuilder.append('(').append(virtualReg2.physicalReg).append(')');
+        } else if (physicalReg2 != null) {
+            stringBuilder.append('(').append(physicalReg2).append(')');
+        } else {
+            stringBuilder.append('(').append(label).append(')');
+        }
+        if (virtualReg1 != null && virtualReg1.spill) {
+            stringBuilder.append("\nsw $a0 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String printLA() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (virtualReg1 != null && virtualReg1.spill) {
+            virtualReg1.physicalReg = PhysicalReg.A0;
+        }
+        if (virtualReg2 != null && virtualReg2.spill) {
+            stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
+            virtualReg2.physicalReg = PhysicalReg.A1;
+        }
+        stringBuilder.append("la ");
+        if (virtualReg1 != null) {
+            stringBuilder.append(virtualReg1.physicalReg).append(' ');
+        } else {
+            stringBuilder.append(physicalReg1).append(' ');
+        }
+        if (imm != null) {
+            stringBuilder.append(imm);
+        }
+        if (virtualReg2 != null) {
+            stringBuilder.append('(').append(virtualReg2.physicalReg).append(')');
+        } else if (physicalReg2 != null) {
+            stringBuilder.append('(').append(physicalReg2).append(')');
+        } else {
+            stringBuilder.append('(').append(label).append(')');
+        }
+        if (virtualReg1 != null && virtualReg1.spill) {
+            stringBuilder.append("\nsw $a0 ").append(virtualReg1.offset).append("($sp)");
+        }
+        return stringBuilder.toString();
     }
 
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         switch (type) {
             case ADDU:
-                break;
+                return printAddU();
             case ADDUI:
-                break;
+                return printAddUI();
             case SUBU:
-                break;
+                return printSubU();
             case MUL:
-                break;
+                return printMul();
             case DIV:
-                break;
+                return printDiv();
             case REM:
-                break;
+                return printRem();
             case LI:
-                break;
+                return printLi();
             case NOP:
-                break;
+                return "nop";
             case J:
-                break;
+                return "j " + label;
             case JAL:
-                break;
+                return "jal " + label;
             case JR:
-                break;
+                return "jr " + physicalReg1;
             case BNEZ:
-                break;
+                return printBNEZ();
             case SLT:
-                break;
+                return printSLT();
+            case SLTI:
+                return printSLTI();
             case SLE:
-                break;
+                return printSLE();
             case SGT:
-                break;
+                return printSGT();
             case SGE:
-                break;
+                return printSGE();
             case SEQ:
-                break;
+                return printSEQ();
             case SNE:
-                break;
+                return printSNE();
             case LW:
-                break;
+                return printLW();
             case SW:
-                break;
+                return printSW();
             case LA:
-                break;
+                return printLA();
             case LABEL:
-                break;
+                return label + ':';
+            case SYSCALL:
+                return "syscall";
         }
         return stringBuilder.toString();
     }
@@ -219,5 +654,6 @@ public class MIPSInstruction {
         LA,
         LABEL,
         PSEUDO, // 伪指令
+        SYSCALL,
     }
 }
