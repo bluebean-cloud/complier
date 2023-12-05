@@ -2,7 +2,7 @@ package backend;
 
 public class MIPSInstruction {
     public Type type;
-    private String label;
+    public String label;
     public VirtualReg virtualReg1;
     public VirtualReg virtualReg2;
     public VirtualReg virtualReg3;
@@ -13,6 +13,7 @@ public class MIPSInstruction {
     public DynamicInt dynamicInt;
     boolean isAlloc;
     boolean needReallocStack;
+    public LFunction lFunction;
 
     public MIPSInstruction(Type type, String label) {
         this.type = type;
@@ -86,14 +87,16 @@ public class MIPSInstruction {
         this.imm = imm;
         isAlloc = true;
     }
+    public int symbol = 1;
 
-    public MIPSInstruction(Type type, PhysicalReg physicalReg1, PhysicalReg physicalReg2, Integer imm, boolean needReallocStack) {
+    public MIPSInstruction(Type type, PhysicalReg physicalReg1, PhysicalReg physicalReg2, Integer imm, boolean needReallocStack, int symbol) {
         this.type = type;
         this.physicalReg1 = physicalReg1;
         this.physicalReg2 = physicalReg2;
         this.imm = imm;
         this.needReallocStack = needReallocStack;
         isAlloc = true;
+        this.symbol = symbol;
     }
 
     public MIPSInstruction(Type type, PhysicalReg physicalReg1, PhysicalReg physicalReg2, PhysicalReg physicalReg3) {
@@ -111,25 +114,33 @@ public class MIPSInstruction {
         isAlloc = true;
     }
 
+    public MIPSInstruction(Type type, VirtualReg virtualReg1, VirtualReg virtualReg2, PhysicalReg physicalReg3) {
+        this.type = type;
+        this.virtualReg1 = virtualReg1;
+        this.virtualReg2 = virtualReg2;
+        this.physicalReg3 = physicalReg3;
+        isAlloc = false;
+    }
+
     public MIPSInstruction(Type type) {
         this.type = type;
     }
 
     public void updateLiveInterVal(int i) {
         if (virtualReg1 != null) {
-            if (virtualReg1.lifeBeign == 0) {
+            if (virtualReg1.lifeBeign == -1) {
                 virtualReg1.lifeBeign = i;
             }
             virtualReg1.lifeEnd = i;
         }
         if (virtualReg2 != null) {
-            if (virtualReg2.lifeBeign == 0) {
+            if (virtualReg2.lifeBeign == -1) {
                 virtualReg2.lifeBeign = i;
             }
             virtualReg2.lifeEnd = i;
         }
         if (virtualReg3 != null) {
-            if (virtualReg3.lifeBeign == 0) {
+            if (virtualReg3.lifeBeign == -1) {
                 virtualReg3.lifeBeign = i;
             }
             virtualReg3.lifeEnd = i;
@@ -295,7 +306,7 @@ public class MIPSInstruction {
             stringBuilder.append("lw $a0 ").append(virtualReg2.offset).append("($sp)\n");
             virtualReg2.physicalReg = PhysicalReg.A0;
         }
-        if (virtualReg3.spill) {
+        if (virtualReg3 != null && virtualReg3.spill) {
             stringBuilder.append("lw $a1 ").append(virtualReg2.offset).append("($sp)\n");
             virtualReg3.physicalReg = PhysicalReg.A1;
         }
@@ -303,7 +314,11 @@ public class MIPSInstruction {
             virtualReg1.physicalReg = PhysicalReg.A2;
         }
         stringBuilder.append("slt ").append(virtualReg1.physicalReg).append(' ').append(virtualReg2.physicalReg).append(' ');
-        stringBuilder.append(virtualReg3.physicalReg);
+        if (virtualReg3 != null) {
+            stringBuilder.append(virtualReg3.physicalReg);
+        } else {
+            stringBuilder.append(physicalReg3);
+        }
 
         if (virtualReg1.spill) {
             stringBuilder.append("\nsw $a2 ").append(virtualReg1.offset).append("($sp)");
@@ -500,7 +515,7 @@ public class MIPSInstruction {
         } else if (physicalReg2 != null) {
             stringBuilder.append('(').append(physicalReg2).append(')');
         } else {
-            stringBuilder.append('(').append(label).append(')');
+            stringBuilder.append(label);
         }
         if (virtualReg1 != null && virtualReg1.spill) {
             stringBuilder.append("\nsw $a0 ").append(virtualReg1.offset).append("($sp)");
@@ -531,7 +546,7 @@ public class MIPSInstruction {
         } else if (physicalReg2 != null) {
             stringBuilder.append('(').append(physicalReg2).append(')');
         } else {
-            stringBuilder.append('(').append(label).append(')');
+            stringBuilder.append(label);
         }
         if (virtualReg1 != null && virtualReg1.spill) {
             stringBuilder.append("\nsw $a0 ").append(virtualReg1.offset).append("($sp)");
@@ -562,7 +577,7 @@ public class MIPSInstruction {
         } else if (physicalReg2 != null) {
             stringBuilder.append('(').append(physicalReg2).append(')');
         } else {
-            stringBuilder.append('(').append(label).append(')');
+            stringBuilder.append(label);
         }
         if (virtualReg1 != null && virtualReg1.spill) {
             stringBuilder.append("\nsw $a0 ").append(virtualReg1.offset).append("($sp)");

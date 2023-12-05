@@ -29,10 +29,11 @@ public class PhysicalReg {
     public static final PhysicalReg A0 = new PhysicalReg(Name.A0);
     public static final PhysicalReg A1 = new PhysicalReg(Name.A1);
     public static final PhysicalReg A2 = new PhysicalReg(Name.A2);
+    public static final PhysicalReg A3 = new PhysicalReg(Name.A3);
 
     public enum Name {
         V0("$v0"),
-        A0("$a0"), A1("$a1"), A2("$a2"),
+        A0("$a0"), A1("$a1"), A2("$a2"), A3("$a3"),
         T1("$t1"), T2("$t2"), T3("$t3"), T4("$t4"), T5("$t5"), T6("$t6"), T7("$t7"), T8("$t8"), T9("$t9"),
         S1("$s1"), S2("$s2"), S3("$s3"), S4("$s4"), S5("$s5"), S6("$s6"), S7("$s7"),
         RA("$ra"),
