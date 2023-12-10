@@ -22,6 +22,12 @@ public class Manager {
         functions.add(function);
     }
 
+    public void renameRegs() {
+        for (Function function: functions) {
+            function.renameReg();
+        }
+    }
+
     public Function findFunction(String name) {
         if (name.charAt(0) != '@') {
             name = '@' + name;

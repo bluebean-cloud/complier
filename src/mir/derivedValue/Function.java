@@ -12,6 +12,8 @@ public class Function extends Value {
     public ArrayList<Instruction> decls = new ArrayList<>();
     public int cnt = 0;
     public ValueType retType;
+    public boolean isRecur = false;
+    public ArrayList<Function> functions = new ArrayList<>();   // 调用的函数
 
     public boolean isParam(String name) {
         for (Value value: params) {
@@ -20,6 +22,26 @@ public class Function extends Value {
             }
         }
         return false;
+    }
+
+    public void renameReg() {
+        int cnt = 0;
+        for (Value value: params) {
+            if (!value.name.isEmpty()) {
+                value.name += "_" + beginName() + "_" + cnt;
+                cnt++;
+            }
+        }
+        for (Value value: decls) {
+            if (!value.name.isEmpty()) {
+                value.name += "_" + beginName() + "_" + cnt;
+                cnt++;
+            }
+        }
+        for (BasicBlock block: blocks) {
+            cnt = block.renameRegs(beginName(), cnt);
+        }
+
     }
 
     public Function(ValueType type, String name) {

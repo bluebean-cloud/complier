@@ -17,6 +17,16 @@ public class BasicBlock extends Value {
         super(type, name);
     }
 
+    public int renameRegs(String funcName, int cnt) {
+        for (Instruction instruction: instructions) {
+            if (!instruction.name.isEmpty()) {
+                instruction.name += "_" + funcName + "_" + cnt;
+                cnt++;
+            }
+        }
+        return cnt;
+    }
+
     public String printCodes() {
         StringBuilder stringBuilder = new StringBuilder();
         if (!name.isEmpty()) {

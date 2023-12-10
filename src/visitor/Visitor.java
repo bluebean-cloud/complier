@@ -36,6 +36,8 @@ public class Visitor {
         }
 
         visitMainFuncDef(root.mainFuncDef);
+
+        Manager.MANAGER.renameRegs();
     }
 
 
@@ -1076,25 +1078,37 @@ public class Visitor {
     private Value FuncCall(UnaryExp unaryExp) {
         Function function = Manager.MANAGER.findFunction(unaryExp.ident.content);
         String name;
-        if (function.retType.isVoid()) {
-            name = "";
-        } else {
-            name = "%call_" + curFunction.cnt;
-            curFunction.cnt++;
+        if (curFunction.name.equals(function.name)) {
+            function.isRecur = true;    // 存在自我调用的递归情况
         }
-        Instruction call = new Instruction(Instruction.InsType.call, name, function.retType);
-        call.funcName = function.name;
-        if (unaryExp.funcRParams != null) {
-            for (Exp exp : unaryExp.funcRParams.exps) {
-                call.addValue(visitExp(exp));
+        if (true) {//function.isRecur) {
+            if (function.retType.isVoid()) {
+                name = "";
+            } else {
+                name = "%call_" + curFunction.cnt;
+                curFunction.cnt++;
             }
+            Instruction call = new Instruction(Instruction.InsType.call, name, function.retType);
+            call.funcName = function.name;
+            if (unaryExp.funcRParams != null) {
+                for (Exp exp : unaryExp.funcRParams.exps) {
+                    call.addValue(visitExp(exp));
+                }
+            }
+            curBlock.addInstruction(call);
+            if (function.retType.isVoid()) {
+                return null;
+            } else {
+                return call;
+            }
+        } else {    // 可以内联
+            if (!curFunction.functions.contains(function)) {
+                curFunction.functions.add(function);
+                curFunction.decls.addAll(function.decls);
+            }
+
         }
-        curBlock.addInstruction(call);
-        if (function.retType.isVoid()) {
-            return null;
-        } else {
-            return call;
-        }
+        return null;
     }
 
     private Value visitLVal(LVal lVal, boolean needLoad) {

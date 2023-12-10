@@ -668,7 +668,6 @@ public class MIPSInstruction {
         SW,
         LA,
         LABEL,
-        PSEUDO, // 伪指令
         SYSCALL,
     }
 }
