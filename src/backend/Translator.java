@@ -23,7 +23,7 @@ public class Translator {
     public int getVarOffset(String name) {
         return sum - varOffset.get(name);
     }
-
+    int v0 = 0;
     LFunction curLFunction;
     private ArrayList<LFunction> lFunctions = new ArrayList<>();
 
@@ -91,12 +91,12 @@ public class Translator {
     BasicBlock curBlock;
 
     private void saveRegs() {
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A0, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A1, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A2, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A0, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A1, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.A2, PhysicalReg.SP, 0));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T1, PhysicalReg.SP, 0));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
@@ -111,45 +111,45 @@ public class Translator {
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T6, PhysicalReg.SP, 0));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T7, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T8, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T9, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S1, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S2, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S3, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S4, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S5, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S6, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S7, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T8, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.T9, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S1, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S2, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S3, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S4, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S5, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S6, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, -4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.SW, PhysicalReg.S7, PhysicalReg.SP, 0));
     }
 
     private void recoverRegs() {
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S7, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S6, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S5, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S4, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S3, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S2, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S1, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T9, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T8, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S7, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S6, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S5, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S4, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S3, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S2, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.S1, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T9, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T8, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T7, PhysicalReg.SP, 0));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T6, PhysicalReg.SP, 0));
@@ -164,15 +164,16 @@ public class Translator {
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.T1, PhysicalReg.SP, 0));
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A2, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A1, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A0, PhysicalReg.SP, 0));
-        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A2, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A1, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.LW, PhysicalReg.A0, PhysicalReg.SP, 0));
+//        addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.SP, PhysicalReg.SP, 4));
     }
 
     private void transFunction() {
+        v0 = 0;
         curLFunction = new LFunction(curFunction.beginName());
         lFunctions.add(curLFunction);
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.beginName()));
@@ -194,6 +195,8 @@ public class Translator {
         if (curFunction.beginName().equals("main")) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LABEL, curFunction.endName()));
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 10));
+
+            v0 = 10;
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
         } else {
             // 结束函数，回收空间
@@ -538,14 +541,20 @@ public class Translator {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 5));
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, virtualReg, PhysicalReg.V0, 0));
+            v0 = 0;
             return;
         } else if (instruction.funcName.equals("@putch")) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 11));
+
+            v0 = 11;
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.A0, instruction.values.get(0).constValue));
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.SYSCALL));
             return;
         } else if (instruction.funcName.equals("@putint")) {
+
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, 1));
+
+            v0 = 1;
             if (instruction.values.get(0).isConst) {
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.A0, instruction.values.get(0).constValue));
             } else {
@@ -584,6 +593,7 @@ public class Translator {
             virtualReg = new VirtualReg();
             curLFunction.addVirtualReg(virtualReg);
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, virtualReg, PhysicalReg.V0, 0)); // 这是一条 move 指令
+            v0 = 0;
             instruction.virtualReg = virtualReg;
         }
     }
@@ -592,8 +602,10 @@ public class Translator {
         if (!instruction.values.isEmpty()) {
             if (instruction.values.get(0).isConst) {
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.LI, PhysicalReg.V0, instruction.values.get(0).constValue));
+                v0 = 0;
             } else {
                 addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, PhysicalReg.V0, instruction.values.get(0).virtualReg, 0));
+                v0 = 0;
             }
         }
         addInstruction(new MIPSInstruction(MIPSInstruction.Type.J, curFunction.endName()));

@@ -25,7 +25,7 @@ public class RegAlloca {
         }
         regInit();
         active = new PriorityQueue<>((o1, o2) -> o2.lifeEnd - o1.lifeEnd); // 栈顶为 lifeEnd 最大的虚拟寄存器
-        int R = 16; // 可用的物理寄存器数量
+        int R = 7; // 可用的物理寄存器数量
         for (VirtualReg curVirtualReg: virtualRegs) {
             // 尝试对当前虚拟寄存器进行分配
             int curPoint = curVirtualReg.lifeBeign;
@@ -61,15 +61,15 @@ public class RegAlloca {
         freePhysicalReg.add(PhysicalReg.T5);
         freePhysicalReg.add(PhysicalReg.T6);
         freePhysicalReg.add(PhysicalReg.T7);
-        freePhysicalReg.add(PhysicalReg.T8);
-        freePhysicalReg.add(PhysicalReg.T9);
-        freePhysicalReg.add(PhysicalReg.S1);
-        freePhysicalReg.add(PhysicalReg.S2);
-        freePhysicalReg.add(PhysicalReg.S3);
-        freePhysicalReg.add(PhysicalReg.S4);
-        freePhysicalReg.add(PhysicalReg.S5);
-        freePhysicalReg.add(PhysicalReg.S6);
-        freePhysicalReg.add(PhysicalReg.S7);
+//        freePhysicalReg.add(PhysicalReg.T8);
+//        freePhysicalReg.add(PhysicalReg.T9);
+//        freePhysicalReg.add(PhysicalReg.S1);
+//        freePhysicalReg.add(PhysicalReg.S2);
+//        freePhysicalReg.add(PhysicalReg.S3);
+//        freePhysicalReg.add(PhysicalReg.S4);
+//        freePhysicalReg.add(PhysicalReg.S5);
+//        freePhysicalReg.add(PhysicalReg.S6);
+//        freePhysicalReg.add(PhysicalReg.S7);
     }
 
 

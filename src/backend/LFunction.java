@@ -25,7 +25,8 @@ public class LFunction {
         }
         for (MIPSInstruction instruction: instructions) {
             if (instruction.needReallocStack && instruction.symbol == 1) {
-                instruction.imm += spillNumber * 4 * instruction.symbol + 4 * 19;
+//                instruction.imm += spillNumber * 4 * instruction.symbol;
+                instruction.imm += spillNumber * 4 * instruction.symbol + 4 * 7;
             } else if (instruction.needReallocStack) {
                 instruction.imm -= spillNumber * 4;
             }
