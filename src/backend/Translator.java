@@ -359,7 +359,7 @@ public class Translator {
         if (imm == null) {
             addInstruction(new MIPSInstruction(MIPSInstruction.Type.SUBU, virtualReg, virtualReg1, virtualReg2));
         } else {
-            addInstruction(new MIPSInstruction(MIPSInstruction.Type.SUBU, virtualReg, virtualReg1, imm));
+            addInstruction(new MIPSInstruction(MIPSInstruction.Type.ADDUI, virtualReg, virtualReg1, imm * -1));
         }
     }
 

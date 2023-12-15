@@ -9,6 +9,8 @@ public class FuncDef implements SyntaxTreeNode {
     public FuncFParams funcFParams;
     public Block block;
 
+    public boolean isSimple = true;
+
     public String getFuncName() {
         return ident.content;
     }

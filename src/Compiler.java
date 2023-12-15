@@ -1,4 +1,6 @@
 import backend.Translator;
+import executor.EndExecptionExecutor;
+import executor.Executor;
 import lexer.Lexer;
 import mir.Manager;
 import parser.Parser;
@@ -23,6 +25,10 @@ public class Compiler {
             if (GlobalConfigure.ERROR && !ErrorLog.ERROR_LOGS.isEmpty()) {
                 ErrorLog.ERROR_LOGS.printErrorLogs();
                 return;
+            }
+            try {
+                Executor.EXECUTOR.run();
+            } catch (EndExecptionExecutor ignored) {
             }
             Visitor.VISITOR.run();
             try (PrintWriter llvm = new PrintWriter("llvm_ir.txt")) {

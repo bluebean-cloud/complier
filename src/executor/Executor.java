@@ -1,13 +1,12 @@
 package executor;
 
+import lexer.Token;
 import lexer.TokenType;
 import parser.Parser;
+import parser.syntaxTreeNodes.Number;
 import parser.syntaxTreeNodes.*;
 import util.GlobalConfigure;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
@@ -23,15 +22,15 @@ public class Executor {
     Random random = new Random();
 
     public void run() {
-        if (GlobalConfigure.DEBUG) {
-            try {
-                scanner = new Scanner(new File("inputfile.txt"));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            scanner = new Scanner(System.in);
-        }
+//        if (GlobalConfigure.DEBUG) {
+//            try {
+//                scanner = new Scanner(new File("inputfile.txt"));
+//            } catch (FileNotFoundException e) {
+//                throw new RuntimeException(e);
+//            }
+//        } else {
+//            scanner = new Scanner(System.in);
+//        }
         CompUnit root = Parser.PARSER.root;
         for (ConstDef constDef: Parser.PARSER.curScope.constDefs) {
             curStack.addVar(constDef);
@@ -40,13 +39,13 @@ public class Executor {
             curStack.addVar(varDef);
         }
         int mainValue = interpretMainFunc(root.mainFuncDef);
-        try (PrintWriter output = new PrintWriter("pcoderesult.txt")) {
-            output.print(stringBuilder.toString());
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println(stringBuilder.toString());
-        System.out.println("\nMain func return value " + mainValue);
+//        try (PrintWriter output = new PrintWriter("pcoderesult.txt")) {
+//            output.print(stringBuilder.toString());
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+//        System.out.println(stringBuilder.toString());
+//        System.out.println("\nMain func return value " + mainValue);
     }
 
     public int interpretMainFunc(MainFuncDef mainFuncDef) {
@@ -222,7 +221,7 @@ public class Executor {
                 return sign * value;
             case FuncCall:
                 RuntimeStack temStack = curStack;   // 保存运行栈
-                int returnValue = sign * callFunc(unaryExp.ident.content, unaryExp.funcRParams);
+                int returnValue = sign * callFunc(unaryExp.ident.content, unaryExp.funcRParams, unaryExp);
                 curStack = temStack;
                 return  returnValue;
         }
@@ -257,10 +256,12 @@ public class Executor {
         return var.getVar(x, y).value;
     }
 
-    public int callFunc(String name, FuncRParams funcRParams) {
+
+    public int callFunc(String name, FuncRParams funcRParams, UnaryExp unaryExp) {
         RuntimeStack temStack = new RuntimeStack(curStack);
         FuncDef funcDef = Parser.PARSER.findFuncDef(name);
         FuncFParams funcFParams = funcDef.funcFParams;
+        boolean isSimple = true;
         if (funcFParams != null) {
             for (int i = 0; i < funcFParams.funcFParams.size(); i++) {
                 if (funcFParams.funcFParams.get(i).deep == 0) { // 朴素的 int 类型
@@ -283,7 +284,18 @@ public class Executor {
                         interpretStmt(blockItem.stmt);
                 }
             }
+            if (funcDef.isSimple) {
+                unaryExp.type = SyntaxType.Empty;
+            }
         } catch (ReturnException e) {
+            if (funcDef.isSimple && isSimple && GlobalConfigure.OBean) {
+                unaryExp.type = SyntaxType.PrimaryExp;
+                unaryExp.primaryExp = new PrimaryExp();
+                unaryExp.primaryExp.isConst = true;
+                unaryExp.primaryExp.type = SyntaxType.Number;
+                unaryExp.primaryExp.number = new Number();
+                unaryExp.primaryExp.number.number = new Token(TokenType.INTCON, String.valueOf(e.value), e.value,-1);
+            }
             return e.value;
         } finally {
             curStack = null;
@@ -319,7 +331,8 @@ public class Executor {
                 break;
             case GetInt:
                 interpretGetInt(stmt);
-                break;
+                throw new EndExecptionExecutor();
+//                break;
             case Printf:
                 interPrintf(stmt);
         }
@@ -345,7 +358,8 @@ public class Executor {
     private void interpretGetInt(Stmt stmt) {
         LVal lVal = stmt.lVal;
         Var var = findVar(lVal.getName());
-        int number = scanner.nextInt();
+//        int number = scanner.nextInt();
+        int number = 0;
         if (lVal.exp1 == null) {    // 普通的变量
             var.setValue(number);
             return;

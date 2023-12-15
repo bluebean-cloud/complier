@@ -199,9 +199,9 @@ public class Parser {
         return initVal;
     }
 
+
     private FuncDef parseFuncDef() {
         FuncDef funcDef = new FuncDef();
-        curFunc = funcDef;
         funcDef.funcType = parseFuncType();
         boolean check = checkRide(Lexer.LEXER.curContent(), Lexer.LEXER.curLine());
         funcDef.ident = Lexer.LEXER.peek();
@@ -274,6 +274,9 @@ public class Parser {
         funcFParam.ident = Lexer.LEXER.peek();
         Lexer.LEXER.next();
         if (Judge.isOf(Lexer.LEXER.curContent(), "[")) {
+            if (curFunc != null) {
+                curFunc.isSimple = false;
+            }
             Lexer.LEXER.next("[");
             try {
                 Lexer.LEXER.next("]");
@@ -432,6 +435,9 @@ public class Parser {
             return stmt;
         }
         if (Judge.isOf(Lexer.LEXER.curContent(), "printf")) {
+            if (curFunc != null) {
+                curFunc.isSimple = false;
+            }
             stmt.type = SyntaxType.Printf;
             int line = Lexer.LEXER.curLine();
             Lexer.LEXER.next("printf");
@@ -464,6 +470,9 @@ public class Parser {
             return stmt;
         }
         if (Lexer.LEXER.containGetInt()) {
+            if (curFunc != null) {
+                curFunc.isSimple = false;
+            }
             stmt.type = SyntaxType.GetInt;
             String name = Lexer.LEXER.curContent();
             int line = Lexer.LEXER.curLine();
@@ -838,12 +847,22 @@ public class Parser {
             }
             for (VarDef varDef: temScope.varDefs) {
                 if (name.equals(varDef.getName())) {
+                    if (temScope.parent == null) {
+                        if (curFunc != null) {
+                            curFunc.isSimple = false;
+                        }
+                    }
                     return;
                 }
             }
             temScope = temScope.parent;
         }
         if (funcDefs.containsKey(name)) {
+            if (!funcDefs.get(name).isSimple) {
+                if (curFunc != null) {
+                    curFunc.isSimple = false;
+                }
+            }
             return;
         }
         ErrorLog.ERROR_LOGS.addErrorLog(line, "c");
