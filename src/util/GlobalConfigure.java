@@ -3,5 +3,5 @@ package util;
 public class GlobalConfigure {
     public static final boolean DEBUG = false;  // 是否开启 DEBUG
     public static final boolean ERROR = true;   // 是否开启错误处理
-    public static final boolean OBean = true;
+    public static final boolean OBean = false;   // 优化选项
 }
