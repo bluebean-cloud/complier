@@ -26,9 +26,11 @@ public class Compiler {
                 ErrorLog.ERROR_LOGS.printErrorLogs();
                 return;
             }
-            try {
-                Executor.EXECUTOR.run();
-            } catch (EndExecptionExecutor ignored) {
+            if (GlobalConfigure.OBean) {
+                try {
+                    Executor.EXECUTOR.run();
+                } catch (EndExecptionExecutor ignored) {
+                }
             }
             Visitor.VISITOR.run();
             try (PrintWriter llvm = new PrintWriter("llvm_ir.txt")) {
