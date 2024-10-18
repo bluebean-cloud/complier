@@ -1,11 +1,14 @@
 #include "./compiler.h"
 
 int main() {
-    tokenRoot = (Token**)malloc(sizeof(Token*) * 100000);
-
-    lexAnalyse(tokenRoot);
+    tokenRoot = curToken = NULL;
+    lexAnalyse();
     printTokens();
     return 0;
+}
+
+Token* peekToken() {
+    return NULL;
 }
 
 void lexAnalyse() {
@@ -29,11 +32,20 @@ void lexAnalyse() {
             break;
         }
     }
+    curToken = tokenRoot;
     fclose(input);
 }
 
 void addToken(Token* token) {
-    tokenRoot[sizeOfTokens++] = token;
+    if (tokenRoot == NULL) {
+        token->next = token->pre = NULL;
+        tokenRoot = curToken = token;
+        return;
+    }
+    curToken->next = token;
+    token->pre = curToken;
+    token->next = NULL;
+    curToken = token;
 }
 
 int isKeyWord(char* word) {
@@ -218,8 +230,10 @@ void handleComments(int c) {
 
 void printTokens() {
     output = fopen(outputFile, "w");
-    for (int i = 0; i < sizeOfTokens; i++) {
-        fprintf(output, "%s %s\n", tokenString[tokenRoot[i]->type], tokenRoot[i]->content);
+    Token* tmp = tokenRoot;
+    while (tmp != NULL) {
+        fprintf(output, "%s %s\n", tokenString[tmp->type], tmp->content);
+        tmp = tmp->next;
     }
     fclose(output);
 }

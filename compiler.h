@@ -32,6 +32,8 @@ typedef struct Token {
     int value;
     int line;
     TokenType type;
+    Token* next;
+    Token* pre;
 } Token;
 
 // Lexer
@@ -45,9 +47,10 @@ int judgeCharType(int c);
 int escToValue(int c);
 void addToken(Token* token);
 void printTokens();
+Token* peekToken();
 
-Token** tokenRoot;
-int sizeOfTokens;
+Token* tokenRoot;
+Token* curToken;
 char curStr[1024];
 FILE* input;
 FILE* output;
