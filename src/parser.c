@@ -14,18 +14,24 @@ Node newNode(NodeType NodeType, Node *parent, Token *token) {
 }
 
 CompUnitNode *parseCompUnit() {
-    CompUnitNode *node;
+    CompUnitNode *node = (CompUnitNode *)malloc(sizeof(CompUnitNode));
+    node->decls = createVector();
+    node->funcDefs = createVector();
     node->node = newNode(CompUnit, NULL, NULL);
     while (hasNextToken()) {
-        if (peekToken(0)->type == CONSTTK) {
-            // constDecl
-        } else if (peekToken(1)->type == MAINTK) {
+        if (peekToken(1)->type == MAINTK) {
             // mainFuncDef
+            node->mainFuncDef = parseMainFuncDef((Node *)node);
         } else if (peekToken(2)->type == LPARENT) {
             // funcDef
+            node->funcDefs->push(node->funcDefs, parseFuncDef((Node*) node));
         } else {
             // decl
         }
     }
     return node;
 }
+
+MainFuncDefNode *parseMainFuncDef(Node *node) {}
+
+FuncDefNode *parseFuncDef(Node *node) {}

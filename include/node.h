@@ -119,8 +119,8 @@ struct Node {
 
 struct CompUnitNode {
     Node node;
-    Vector decls;
-    Vector funcDefs;
+    Vector *decls;
+    Vector *funcDefs;
     MainFuncDefNode *mainFuncDef;
 };
 
@@ -134,7 +134,7 @@ struct FuncDefNode {
     Node node;
     FuncTypeNode *funcType;
     IdentNode *funcName;
-    Vector funcFParams;
+    Vector *funcFParams;
     BlockNode *block;
 };
 
@@ -151,13 +151,13 @@ struct FuncTypeNode {
 struct ConstDeclNode {
     Node node;
     TypeBorFuncType typeBType;
-    Vector constDefs;
+    Vector *constDefs;
 };
 
 struct ConstInitValNode {
     Node node;
     ConstExpNode *constExp;
-    Vector constExps;
+    Vector *constExps;
     StringConstNode *stringConst;
 };
 
@@ -169,7 +169,7 @@ struct ConstExpNode {
 struct VarDeclNode {
     Node node;
     TypeBorFuncType typeBType;
-    Vector varDefs;
+    Vector *varDefs;
 };
 
 struct VarDefNode {
@@ -182,7 +182,7 @@ struct VarDefNode {
 struct InitValNode {
     Node node;
     ExpNode *exp;
-    Vector exps;
+    Vector *exps;
     StringConstNode *stringConst;
 };
 
@@ -199,12 +199,12 @@ struct IdentNode {
 
 struct FuncFParamsNode {
     Node node;
-    Vector funcFParams;
+    Vector *funcFParams;
 };
 
 struct BlockNode {
     Node node;
-    Vector blockItems;
+    Vector *blockItems;
 };
 
 struct BlockItemNode {
@@ -226,7 +226,7 @@ struct StmtNode {
     ForStmtNode *forStmt2;
     StmtNode *forStmt;
     StringConstNode *stringConst;
-    Vector exps;
+    Vector *exps;
 };
 
 struct ExpNode {
@@ -238,14 +238,14 @@ struct AddExpNode {
     Node node;
     // PLUS | MINU
     TokenType addType;
-    Vector mulExps;
+    Vector *mulExps;
 };
 
 struct MulExpNode {
     Node node;
     // MULT | DIV | MOD
     TokenType mulType;
-    Vector unaryExps;
+    Vector *unaryExps;
 };
 
 struct UnaryExpNode {
@@ -260,7 +260,7 @@ struct UnaryExpNode {
 
 struct FuncRParamsNode {
     Node node;
-    Vector exps;
+    Vector *exps;
 };
 
 struct FuncFParamNode {
@@ -336,7 +336,7 @@ struct UnaryOpNode {
 
 struct StringConstNode {
     Node node;
-    char* str;
+    char *str;
 };
 
 #endif

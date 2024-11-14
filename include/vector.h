@@ -13,7 +13,7 @@ struct Vector {
     void (*push)(Vector *, void *);
 };
 
-Vector createVector();
+Vector* createVector();
 void push(Vector *vector, void *item);
 
 #endif

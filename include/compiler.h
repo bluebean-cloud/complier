@@ -31,5 +31,8 @@ int hasNextToken();
 void analyzeSyntax();
 Node newNode(NodeType NodeType, Node* parent, Token* token);
 CompUnitNode *parseCompUnit();
+MainFuncDefNode *parseMainFuncDef(Node* node);
+FuncDefNode *parseFuncDef(Node* node);
+
 
 #endif
