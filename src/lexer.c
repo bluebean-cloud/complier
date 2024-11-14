@@ -1,5 +1,9 @@
 #include "../include/compiler.h"
 
+/*
+    词法分析的实现部分
+*/
+
 const int numOfKey = 37;
 const char keyWords[][10] = {
     "main", "const",  "int",     "char",   "break",  "continue", "if", "else",
@@ -234,7 +238,7 @@ void getOthers(Token *t) {
     addToken(t);
 }
 
-// trans esc to value
+// 将转义字符转换为值
 int escToValue(int c) {
     switch (c) {
     case 'a':

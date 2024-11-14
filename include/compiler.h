@@ -2,6 +2,7 @@
 #define _COMPILER
 
 #include "node.h"
+#include "token.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,5 @@ void printTokens();
 Token *peekToken(int step);
 char *peekTokenValue(int step);
 Token *nextToken();
-
 
 #endif

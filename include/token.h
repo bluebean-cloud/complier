@@ -2,8 +2,6 @@
 #define _TOKEN
 #include <stdio.h>
 
-
-
 typedef struct Token Token;
 typedef enum TokenType {
     MAINTK,

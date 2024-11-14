@@ -253,7 +253,6 @@ struct FuncRParamsNode {
 
 struct FuncFParamNode {
     Node node;
-    
 };
 
 struct PrimaryExpNode {
