@@ -1,5 +1,10 @@
 #ifndef _TOKEN
 #define _TOKEN
+#include <stdio.h>
+
+
+
+typedef struct Token Token;
 typedef enum TokenType {
     MAINTK,
     CONSTTK,
@@ -46,13 +51,13 @@ typedef enum TokenType {
     END,
 } TokenType;
 
-typedef struct Token {
+struct Token {
     char *content;
     int value;
     int line;
     TokenType type;
     Token *next;
     Token *pre;
-} Token;
+};
 
 #endif
