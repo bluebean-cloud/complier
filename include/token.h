@@ -4,44 +4,44 @@
 
 typedef struct Token Token;
 typedef enum TokenType {
-    MAINTK,
-    CONSTTK,
-    INTTK,
-    CHARTK,
-    BREAKTK,
-    CONTINUETK,
-    IFTK,
-    ELSETK,
-    FORTK,
-    GETINTTK,
-    GETCHARTK,
-    PRINTFTK,
-    RETURNTK,
-    VOIDTK,
-    NOT,
-    AND,
-    OR,
-    PLUS,
-    MINU,
-    MULT,
-    DIV,
-    MOD,
-    LSS,
-    LEQ,
-    GRE,
-    GEQ,
-    EQL,
-    NEQ,
-    ASSIGN,
-    SEMICN,
-    COMMA,
-    LPARENT,
-    RPARENT,
-    LBRACK,
-    RBRACK,
-    LBRACE,
-    RBRACE,
-    INTCON,
+    MAINTK,     // main
+    CONSTTK,    // const
+    INTTK,      // int
+    CHARTK,     // char
+    BREAKTK,    // break
+    CONTINUETK, // continue
+    IFTK,       // if
+    ELSETK,     // else
+    FORTK,      // for
+    GETINTTK,   // getint
+    GETCHARTK,  // getchar
+    PRINTFTK,   // printf
+    RETURNTK,   // return
+    VOIDTK,     // void
+    NOT,        // !
+    AND,        // &&
+    OR,         // ||
+    PLUS,       // +
+    MINU,       // -
+    MULT,       // *
+    DIV,        // /
+    MOD,        // %
+    LSS,        // <
+    LEQ,        // <=
+    GRE,        // >
+    GEQ,        // >=
+    EQL,        // ==
+    NEQ,        // !=
+    ASSIGN,     // =
+    SEMICN,     // ;
+    COMMA,      // ,
+    LPARENT,    // (
+    RPARENT,    // )
+    LBRACK,     // [
+    RBRACK,     // ]
+    LBRACE,     // {
+    RBRACE,     // }
+    INTCON,     
     CHRCON,
     STRCON,
     IDENFR,

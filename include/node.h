@@ -52,8 +52,15 @@ typedef enum StmtType {
     RETURN_STMT,
     GETINT_STMT,
     GETCHAR_STMT,
-    PRINTF_STMT
+    PRINTF_STMT,
 } StmtType;
+
+typedef enum PrimaryNodeType {
+    EXP_PRIMARY,
+    LVAL_PRIMARY,
+    NUMBER_PRIMARY,
+    CHARACTER_PRIMARY,
+} PrimaryNodeType;
 
 typedef enum UnaryExpType { PRIMARY, CALL, UNARY } UnaryExpType;
 
@@ -226,13 +233,15 @@ struct ExpNode {
 
 struct AddExpNode {
     Node node;
-    NodeType addType;
+    // PLUS | MINU
+    TokenType addType;
     Vector mulExps;
 };
 
 struct MulExpNode {
     Node node;
-    NodeType mulType;
+    // MULT | DIV | MOD
+    TokenType mulType;
     Vector unaryExps;
 };
 
@@ -253,46 +262,78 @@ struct FuncRParamsNode {
 
 struct FuncFParamNode {
     Node node;
+    TypeBorFuncType typeBType;
+    IdentNode *name;
+    int isArray;
 };
 
 struct PrimaryExpNode {
     Node node;
+    PrimaryNodeType primaryType;
+    ExpNode *exp;
+    LValNode *lVal;
+    NumberNode *number;
+    CharacterNode *character;
 };
 
 struct CondNode {
     Node node;
+    LOrExpNode *lOrExp;
 };
 
 struct LOrExpNode {
     Node node;
+    LAndExpNode *lAndExp;
+    LOrExpNode *lOrExp;
 };
 
 struct LAndExpNode {
     Node node;
+    EqExpNode *eqExp;
+    LAndExpNode *lAndExp;
 };
 
 struct EqExpNode {
     Node node;
+    // EQL | NEQ
+    TokenType eqExpType;
+    RelExpNode *relExp;
+    EqExpNode *eqExp;
 };
 
 struct RelExpNode {
     Node node;
+    // LSS | LEQ | GRE | GEQ
+    TokenType relExpType;
+    AddExpNode *addExp;
+    RelExpNode *relExp;
 };
 
 struct NumberNode {
     Node node;
+    int value;
 };
 
 struct CharacterNode {
     Node node;
+    int value;
 };
 
 struct ForStmtNode {
     Node node;
+    LValNode *lVal;
+    ExpNode *exp;
 };
 
-struct UnaryOpNode {};
+struct UnaryOpNode {
+    Node node;
+    // PLUS | MINU | NOT
+    TokenType unaryOpType;
+};
 
-struct StringConstNode {};
+struct StringConstNode {
+    Node node;
+    char* str;
+};
 
 #endif
