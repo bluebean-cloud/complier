@@ -3,6 +3,10 @@
 #include "token.h"
 #include "vector.h"
 
+/*
+    语法分析头文件
+*/
+
 typedef enum NodeType {
     CompUnit,
     Decl,
@@ -110,7 +114,6 @@ typedef struct StringConstNode StringConstNode;
 struct Node {
     NodeType nodeType; // type of Node
     Token *token;      // token
-    char *word;        // word
     Node *parent;      // parent
 };
 

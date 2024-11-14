@@ -5,6 +5,7 @@
 */
 
 const int numOfKey = 37;
+// keyWords、tokenString 和 TokenType 中对应内容的顺序是严格相等的，这样可以直接相互转换
 const char keyWords[][10] = {
     "main", "const",  "int",     "char",   "break",  "continue", "if", "else",
     "for",  "getint", "getchar", "printf", "return", "void",     "!",  "&&",
@@ -19,8 +20,7 @@ const char tokenString[][15] = {
     "MINU",     "MULT",    "DIV",     "MOD",      "LSS",       "LEQ",
     "GRE",      "GEQ",     "EQL",     "NEQ",      "ASSIGN",    "SEMICN",
     "COMMA",    "LPARENT", "RPARENT", "LBRACK",   "RBRACK",    "LBRACE",
-    "RBRACE",   "INTCON",  "CHRCON",  "STRCON",   "IDENFR",    "KEYWORD",
-    "END",
+    "RBRACE",   "INTCON",  "CHRCON",  "STRCON",   "IDENFR",    "END",
 };
 
 Token *tokenRoot;
@@ -44,8 +44,6 @@ Token *peekToken(int step) {
     return tmp;
 }
 
-char *peekTokenValue(int step) { return peekToken(step)->content; }
-
 // get curToken and step next
 Token *nextToken() {
     Token *tmp = curToken;
@@ -55,7 +53,7 @@ Token *nextToken() {
     return tmp;
 }
 
-// do lex
+// 进行词法分析
 void lexAnalyse() {
     tokenRoot = curToken = NULL;
     input = fopen(inputFile, "rb");
@@ -97,7 +95,7 @@ void addToken(Token *token) {
     curToken = token;
 }
 
-// judge is keyWord or not and return enum value of word
+// 判断是否为关键字，若是则直接返回枚举值
 int isKeyWord(char *word) {
     for (int i = 0; i < numOfKey; i++) {
         if (strcmp(word, keyWords[i]) == 0) {
@@ -298,3 +296,5 @@ void printTokens() {
     }
     fclose(output);
 }
+
+int hasNextToken() { return peekToken(1) != NULL; }

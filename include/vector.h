@@ -1,5 +1,10 @@
 #ifndef _VECTOR
 #define VECTOR
+
+/*
+    动态数组
+*/
+
 typedef struct Vector Vector;
 struct Vector {
     int limit;

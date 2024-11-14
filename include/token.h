@@ -2,50 +2,94 @@
 #define _TOKEN
 #include <stdio.h>
 
+/*
+    词法分析头文件
+*/
+
 typedef struct Token Token;
 typedef enum TokenType {
-    MAINTK,     // main
-    CONSTTK,    // const
-    INTTK,      // int
-    CHARTK,     // char
-    BREAKTK,    // break
-    CONTINUETK, // continue
-    IFTK,       // if
-    ELSETK,     // else
-    FORTK,      // for
-    GETINTTK,   // getint
-    GETCHARTK,  // getchar
-    PRINTFTK,   // printf
-    RETURNTK,   // return
-    VOIDTK,     // void
-    NOT,        // !
-    AND,        // &&
-    OR,         // ||
-    PLUS,       // +
-    MINU,       // -
-    MULT,       // *
-    DIV,        // /
-    MOD,        // %
-    LSS,        // <
-    LEQ,        // <=
-    GRE,        // >
-    GEQ,        // >=
-    EQL,        // ==
-    NEQ,        // !=
-    ASSIGN,     // =
-    SEMICN,     // ;
-    COMMA,      // ,
-    LPARENT,    // (
-    RPARENT,    // )
-    LBRACK,     // [
-    RBRACK,     // ]
-    LBRACE,     // {
-    RBRACE,     // }
-    INTCON,     
+    // main
+    MAINTK,
+    // const
+    CONSTTK,
+    // int
+    INTTK,
+    // char
+    CHARTK,
+    // break
+    BREAKTK,
+    // continue
+    CONTINUETK,
+    // if
+    IFTK,
+    // else
+    ELSETK,
+    // for
+    FORTK,
+    // getint
+    GETINTTK,
+    // getchar
+    GETCHARTK,
+    // printf
+    PRINTFTK,
+    // return
+    RETURNTK,
+    // void
+    VOIDTK,
+    // !
+    NOT,
+    // &&
+    AND,
+    // ||
+    OR,
+    // +
+    PLUS,
+    // -
+    MINU,
+    // *
+    MULT,
+    // /
+    DIV,
+    // %
+    MOD,
+    // <
+    LSS,
+    // <=
+    LEQ,
+    // >
+    GRE,
+    // >=
+    GEQ,
+    // ==
+    EQL,
+    // !=
+    NEQ,
+    // =
+    ASSIGN,
+    // ;
+    SEMICN,
+    // ,
+    COMMA,
+    // (
+    LPARENT,
+    // )
+    RPARENT,
+    // [
+    LBRACK,
+    // ]
+    RBRACK,
+    // {
+    LBRACE,
+    // }
+    RBRACE,
+    // int const value
+    INTCON,
+    // char const value
     CHRCON,
+    // string const value
     STRCON,
+    // idenfr
     IDENFR,
-    KEYWORD,
     END,
 } TokenType;
 
