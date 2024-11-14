@@ -1,5 +1,6 @@
 #include "./compiler.h"
 
+// just go go
 int main() {
     tokenRoot = curToken = NULL;
     lexAnalyse();
@@ -7,10 +8,32 @@ int main() {
     return 0;
 }
 
-Token* peekToken() {
-    return NULL;
+// peek Token relative to curToken
+Token* peekToken(int step) {
+    Token* tmp = curToken;
+    if (step < 0) {
+        return NULL;
+    }
+    while (step-- && tmp) {
+        tmp = tmp->next;
+    }
+    return tmp;
 }
 
+char* peekTokenValue(int step) {
+    return peekToken(step)->content;
+}
+
+// get curToken and step next
+Token* nextToken() {
+    Token* tmp = curToken;
+    if (curToken->next) {
+        curToken = curToken->next;
+    }
+    return tmp;
+}
+
+// do lex
 void lexAnalyse() {
     input = fopen(inputFile, "rb");
     int c;
@@ -36,6 +59,7 @@ void lexAnalyse() {
     fclose(input);
 }
 
+// add token to tail of tokens
 void addToken(Token* token) {
     if (tokenRoot == NULL) {
         token->next = token->pre = NULL;
@@ -48,6 +72,7 @@ void addToken(Token* token) {
     curToken = token;
 }
 
+// judge is keyWord or not and return enum value of word
 int isKeyWord(char* word) {
     for (int i = 0; i < numOfKey; i++) {
         if (strcmp(word, keyWords[i]) == 0) {
@@ -57,6 +82,7 @@ int isKeyWord(char* word) {
     return -1;
 }
 
+// 0: others 1: digit 2: ident
 int judgeCharType(int c) {
     if (isdigit(c)) {
         return 1;
@@ -67,6 +93,7 @@ int judgeCharType(int c) {
     return 0;
 }
 
+// get next int
 void getInt(Token* t) {
     int number = curStr[0] - '0';
     int c;
@@ -86,6 +113,7 @@ void getInt(Token* t) {
     fseek(input, -1, SEEK_CUR);
 }
 
+// get next word
 void getWord(Token* t) {
     int c;
     int len = 1;
@@ -106,6 +134,7 @@ void getWord(Token* t) {
     fseek(input, -1, SEEK_CUR);
 }
 
+// get operators or process comments
 void getOthers(Token* t) {
     int c = curStr[0];
     int len = 1;
@@ -181,6 +210,7 @@ void getOthers(Token* t) {
     addToken(t);
 }
 
+// trans esc to value
 int escToValue(int c) {
     switch (c) {
     case 'a':
@@ -208,6 +238,7 @@ int escToValue(int c) {
     }
 }
 
+// handle comments
 void handleComments(int c) {
     if (c == '/') {
         while ((c = fgetc(input)) != EOF) {
@@ -228,6 +259,7 @@ void handleComments(int c) {
     }
 }
 
+// print token linked list
 void printTokens() {
     output = fopen(outputFile, "w");
     Token* tmp = tokenRoot;
@@ -237,3 +269,5 @@ void printTokens() {
     }
     fclose(output);
 }
+
+
