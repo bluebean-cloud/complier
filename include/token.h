@@ -94,12 +94,12 @@ typedef enum TokenType {
 } TokenType;
 
 struct Token {
-    char *content;
+    char* content;
     int value;
     int line;
     TokenType type;
-    Token *next;
-    Token *pre;
+    Token* next;
+    Token* pre;
 };
 
 #endif

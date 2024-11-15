@@ -5,7 +5,8 @@
 */
 
 const int numOfKey = 37;
-// keyWords、tokenString 和 TokenType 中对应内容的顺序是严格相等的，这样可以直接相互转换
+// keyWords、tokenString 和 TokenType
+// 中对应内容的顺序是严格相等的，这样可以直接相互转换
 const char keyWords[][10] = {
     "main", "const",  "int",     "char",   "break",  "continue", "if", "else",
     "for",  "getint", "getchar", "printf", "return", "void",     "!",  "&&",
@@ -23,18 +24,18 @@ const char tokenString[][15] = {
     "RBRACE",   "INTCON",  "CHRCON",  "STRCON",   "IDENFR",    "END",
 };
 
-Token *tokenRoot;
-Token *curToken;
+Token* tokenRoot;
+Token* curToken;
 char curStr[1024];
-FILE *input;
-FILE *output;
+FILE* input;
+FILE* output;
 int curLine;
 const char inputFile[] = "testfile.txt";
 const char outputFile[] = "ans.txt";
 
 // peek Token relative to curToken
-Token *peekToken(int step) {
-    Token *tmp = curToken;
+Token* peekToken(int step) {
+    Token* tmp = curToken;
     if (step < 0) {
         return NULL;
     }
@@ -45,8 +46,8 @@ Token *peekToken(int step) {
 }
 
 // get curToken and step next
-Token *nextToken() {
-    Token *tmp = curToken;
+Token* nextToken() {
+    Token* tmp = curToken;
     if (curToken->next) {
         curToken = curToken->next;
     }
@@ -64,7 +65,7 @@ void lexAnalyse() {
             curLine++;
         if (isspace(c))
             continue;
-        Token *newToken = (Token *)malloc(sizeof(Token));
+        Token* newToken = (Token*)malloc(sizeof(Token));
         curStr[0] = c;
         switch (judgeCharType(c)) {
         case 1: // digit
@@ -83,7 +84,7 @@ void lexAnalyse() {
 }
 
 // add token to tail of tokens
-void addToken(Token *token) {
+void addToken(Token* token) {
     if (tokenRoot == NULL) {
         token->next = token->pre = NULL;
         tokenRoot = curToken = token;
@@ -96,7 +97,7 @@ void addToken(Token *token) {
 }
 
 // 判断是否为关键字，若是则直接返回枚举值
-int isKeyWord(char *word) {
+int isKeyWord(char* word) {
     for (int i = 0; i < numOfKey; i++) {
         if (strcmp(word, keyWords[i]) == 0) {
             return i;
@@ -117,7 +118,7 @@ int judgeCharType(int c) {
 }
 
 // get next int
-void getInt(Token *t) {
+void getInt(Token* t) {
     int number = curStr[0] - '0';
     int c;
     while ((c = fgetc(input)) != EOF) {
@@ -129,7 +130,7 @@ void getInt(Token *t) {
     t->line = curLine;
     t->type = INTCON;
     t->value = number;
-    t->content = (char *)malloc(sizeof(char) * 10);
+    t->content = (char*)malloc(sizeof(char) * 10);
     sprintf(t->content, "%d", number);
     addToken(t);
 
@@ -137,7 +138,7 @@ void getInt(Token *t) {
 }
 
 // get next word
-void getWord(Token *t) {
+void getWord(Token* t) {
     int c;
     int len = 1;
     while ((c = fgetc(input)) != EOF) {
@@ -148,7 +149,7 @@ void getWord(Token *t) {
     }
     curStr[len] = '\0';
     t->line = curLine;
-    t->content = (char *)malloc(sizeof(char) * (len + 1));
+    t->content = (char*)malloc(sizeof(char) * (len + 1));
     strcpy(t->content, curStr);
     c = isKeyWord(curStr);
     t->type = c == -1 ? IDENFR : c;
@@ -158,7 +159,7 @@ void getWord(Token *t) {
 }
 
 // get operators or process comments
-void getOthers(Token *t) {
+void getOthers(Token* t) {
     int c = curStr[0];
     int len = 1;
     if (c == '/') { // is comment?
@@ -180,7 +181,7 @@ void getOthers(Token *t) {
         curStr[len] = '\0';
         t->line = curLine;
         t->type = CHRCON;
-        t->content = (char *)malloc(sizeof(char) * (len + 1));
+        t->content = (char*)malloc(sizeof(char) * (len + 1));
         strcpy(t->content, curStr);
         if (len == 3) {
             t->value = curStr[1];
@@ -198,7 +199,7 @@ void getOthers(Token *t) {
         curStr[len] = '\0';
         t->line = curLine;
         t->type = STRCON;
-        t->content = (char *)malloc(sizeof(char) * (len + 1));
+        t->content = (char*)malloc(sizeof(char) * (len + 1));
         strcpy(t->content, curStr);
         t->value = 0;
         addToken(t);
@@ -208,7 +209,7 @@ void getOthers(Token *t) {
         curStr[len++] = fgetc(input);
         curStr[len] = '\0';
         t->line = curLine;
-        t->content = (char *)malloc(sizeof(char) * (len + 1));
+        t->content = (char*)malloc(sizeof(char) * (len + 1));
         strcpy(t->content, curStr);
         t->type = curStr[0] == '&' ? AND : OR;
         addToken(t);
@@ -222,7 +223,7 @@ void getOthers(Token *t) {
             fseek(input, -1, SEEK_CUR);
         curStr[len] = '\0';
         t->line = curLine;
-        t->content = (char *)malloc(sizeof(char) * (len + 1));
+        t->content = (char*)malloc(sizeof(char) * (len + 1));
         strcpy(t->content, curStr);
         t->type = isKeyWord(curStr);
         addToken(t);
@@ -230,7 +231,7 @@ void getOthers(Token *t) {
     }
     curStr[len] = '\0';
     t->line = curLine;
-    t->content = (char *)malloc(sizeof(char) * (len + 1));
+    t->content = (char*)malloc(sizeof(char) * (len + 1));
     strcpy(t->content, curStr);
     t->type = isKeyWord(curStr);
     addToken(t);
@@ -289,7 +290,7 @@ void handleComments(int c) {
 // print token linked list
 void printTokens() {
     output = fopen(outputFile, "w");
-    Token *tmp = tokenRoot;
+    Token* tmp = tokenRoot;
     while (tmp != NULL) {
         fprintf(output, "%s %s\n", tokenString[tmp->type], tmp->content);
         tmp = tmp->next;
@@ -297,4 +298,6 @@ void printTokens() {
     fclose(output);
 }
 
-int hasNextToken() { return peekToken(1) != NULL; }
+int hasNextToken() {
+    return peekToken(1) != NULL;
+}

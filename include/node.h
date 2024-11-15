@@ -75,7 +75,6 @@ typedef struct CompUnitNode CompUnitNode;
 typedef struct DeclNode DeclNode;
 typedef struct FuncDefNode FuncDefNode;
 typedef struct MainFuncDefNode MainFuncDefNode;
-typedef struct FuncTypeNode FuncTypeNode;
 typedef struct ConstDeclNode ConstDeclNode;
 typedef struct ConstInitValNode ConstInitValNode;
 typedef struct ConstExpNode ConstExpNode;
@@ -113,203 +112,201 @@ typedef struct StringConstNode StringConstNode;
 */
 struct Node {
     NodeType nodeType; // type of Node
-    Token *token;      // token
-    Node *parent;      // parent
+    Token* token;      // token
+    Node* parent;      // parent
 };
 
 struct CompUnitNode {
     Node node;
-    Vector *decls;
-    Vector *funcDefs;
-    MainFuncDefNode *mainFuncDef;
+    Vector* decls;
+    Vector* funcDefs;
+    MainFuncDefNode* mainFuncDef;
 };
 
 struct DeclNode {
     Node node;
-    ConstDeclNode *constDecl;
-    VarDeclNode *VarDecl;
+    ConstDeclNode* constDecl;
+    VarDeclNode* VarDecl;
 };
 
 struct FuncDefNode {
     Node node;
-    FuncTypeNode *funcType;
-    IdentNode *funcName;
-    Vector *funcFParams;
-    BlockNode *block;
+    TypeBorFuncType typeFuncType;
+    IdentNode* funcName;
+    Vector* funcFParams;
+    BlockNode* block;
 };
 
 struct MainFuncDefNode {
     Node node;
-    BlockNode *block;
-};
-
-struct FuncTypeNode {
-    Node node;
-    TypeBorFuncType typeFuncType;
+    BlockNode* block;
 };
 
 struct ConstDeclNode {
     Node node;
     TypeBorFuncType typeBType;
-    Vector *constDefs;
+    Vector* constDefs;
 };
 
 struct ConstInitValNode {
     Node node;
-    ConstExpNode *constExp;
-    Vector *constExps;
-    StringConstNode *stringConst;
+    ConstExpNode* constExp;
+    Vector* constExps;
+    StringConstNode* stringConst;
 };
 
 struct ConstExpNode {
     Node node;
-    AddExpNode *addExp;
+    AddExpNode* addExp;
 };
 
 struct VarDeclNode {
     Node node;
     TypeBorFuncType typeBType;
-    Vector *varDefs;
+    Vector* varDefs;
 };
 
 struct VarDefNode {
     Node node;
-    IdentNode *name;
-    ConstExpNode *size;
-    InitValNode *initVal;
+    IdentNode* ident;
+    ConstExpNode* size;
+    InitValNode* initVal;
+    char* name;
 };
 
 struct InitValNode {
     Node node;
-    ExpNode *exp;
-    Vector *exps;
-    StringConstNode *stringConst;
+    ExpNode* exp;
+    Vector* exps;
+    StringConstNode* stringConst;
 };
 
 struct LValNode {
     Node node;
-    IdentNode *ident;
-    ExpNode *exp;
+    IdentNode* ident;
+    ExpNode* exp;
 };
 
 struct IdentNode {
     Node node;
-    char *name;
+    char* value;
 };
 
 struct FuncFParamsNode {
     Node node;
-    Vector *funcFParams;
+    Vector* funcFParams;
 };
 
 struct BlockNode {
     Node node;
-    Vector *blockItems;
+    Vector* blockItems;
 };
 
 struct BlockItemNode {
     Node node;
-    DeclNode *decl;
-    StmtNode *stmt;
+    DeclNode* decl;
+    StmtNode* stmt;
 };
 
 struct StmtNode {
     Node node;
     StmtType stmtType;
-    LValNode *lVal;
-    ExpNode *exp;
-    BlockNode *block;
-    CondNode *cond;
-    StmtNode *ifStmt;
-    StmtNode *elStmt;
-    ForStmtNode *forStmt1;
-    ForStmtNode *forStmt2;
-    StmtNode *forStmt;
-    StringConstNode *stringConst;
-    Vector *exps;
+    LValNode* lVal;
+    ExpNode* exp;
+    BlockNode* block;
+    CondNode* cond;
+    StmtNode* ifStmt;
+    StmtNode* elStmt;
+    ForStmtNode* forStmt1;
+    ForStmtNode* forStmt2;
+    StmtNode* forStmt;
+    StringConstNode* stringConst;
+    Vector* exps;
 };
 
 struct ExpNode {
     Node node;
-    AddExpNode *addExp;
+    AddExpNode* addExp;
 };
 
 struct AddExpNode {
     Node node;
     // PLUS | MINU
     TokenType addType;
-    Vector *mulExps;
+    Vector* mulExps;
 };
 
 struct MulExpNode {
     Node node;
     // MULT | DIV | MOD
     TokenType mulType;
-    Vector *unaryExps;
+    Vector* unaryExps;
 };
 
 struct UnaryExpNode {
     Node node;
     UnaryExpType unaryExpType;
-    PrimaryExpNode *primaryExp;
-    IdentNode *name;
-    FuncRParamsNode *funcRParams;
-    UnaryOpNode *unaryOp;
-    UnaryExpNode *unaryExp;
+    PrimaryExpNode* primaryExp;
+    IdentNode* ident;
+    FuncRParamsNode* funcRParams;
+    UnaryOpNode* unaryOp;
+    UnaryExpNode* unaryExp;
+    char* name;
 };
 
 struct FuncRParamsNode {
     Node node;
-    Vector *exps;
+    Vector* exps;
 };
 
 struct FuncFParamNode {
     Node node;
     TypeBorFuncType typeBType;
-    IdentNode *name;
+    IdentNode* ident;
+    char* name;
     int isArray;
 };
 
 struct PrimaryExpNode {
     Node node;
     PrimaryNodeType primaryType;
-    ExpNode *exp;
-    LValNode *lVal;
-    NumberNode *number;
-    CharacterNode *character;
+    ExpNode* exp;
+    LValNode* lVal;
+    NumberNode* number;
+    CharacterNode* character;
 };
 
 struct CondNode {
     Node node;
-    LOrExpNode *lOrExp;
+    LOrExpNode* lOrExp;
 };
 
 struct LOrExpNode {
     Node node;
-    LAndExpNode *lAndExp;
-    LOrExpNode *lOrExp;
+    LAndExpNode* lAndExp;
+    LOrExpNode* lOrExp;
 };
 
 struct LAndExpNode {
     Node node;
-    EqExpNode *eqExp;
-    LAndExpNode *lAndExp;
+    EqExpNode* eqExp;
+    LAndExpNode* lAndExp;
 };
 
 struct EqExpNode {
     Node node;
     // EQL | NEQ
     TokenType eqExpType;
-    RelExpNode *relExp;
-    EqExpNode *eqExp;
+    RelExpNode* relExp;
+    EqExpNode* eqExp;
 };
 
 struct RelExpNode {
     Node node;
     // LSS | LEQ | GRE | GEQ
     TokenType relExpType;
-    AddExpNode *addExp;
-    RelExpNode *relExp;
+    AddExpNode* addExp;
+    RelExpNode* relExp;
 };
 
 struct NumberNode {
@@ -324,8 +321,8 @@ struct CharacterNode {
 
 struct ForStmtNode {
     Node node;
-    LValNode *lVal;
-    ExpNode *exp;
+    LValNode* lVal;
+    ExpNode* exp;
 };
 
 struct UnaryOpNode {
@@ -336,7 +333,7 @@ struct UnaryOpNode {
 
 struct StringConstNode {
     Node node;
-    char *str;
+    char* str;
 };
 
 #endif

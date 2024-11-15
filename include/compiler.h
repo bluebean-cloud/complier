@@ -14,25 +14,28 @@
 
 // Lexer
 void lexAnalyse();
-void getInt(Token *t);
-void getWord(Token *t);
-void getOthers(Token *t);
+void getInt(Token* t);
+void getWord(Token* t);
+void getOthers(Token* t);
 void handleComments(int c);
-int isKeyWord(char *word);
+int isKeyWord(char* word);
 int judgeCharType(int c);
 int escToValue(int c);
-void addToken(Token *token);
+void addToken(Token* token);
 void printTokens();
-Token *peekToken(int step);
-Token *nextToken();
+Token* peekToken(int step);
+Token* nextToken();
 int hasNextToken();
 
 // Parser
 void analyzeSyntax();
 Node newNode(NodeType NodeType, Node* parent, Token* token);
-CompUnitNode *parseCompUnit();
-MainFuncDefNode *parseMainFuncDef(Node* node);
-FuncDefNode *parseFuncDef(Node* node);
-
-
+CompUnitNode* parseCompUnit();
+MainFuncDefNode* parseMainFuncDef(Node* parent);
+FuncDefNode* parseFuncDef(Node* parent);
+FuncFParamsNode* parseFuncFParams(Node* parent);
+FuncFParamNode* parseFuncFParam(Node* parent);
+BlockNode* parseBlock(Node* parent);
+DeclNode* parseDecl(Node* parent);
+IdentNode* parseIdent(Node* parent);
 #endif
