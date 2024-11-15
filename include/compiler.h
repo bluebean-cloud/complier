@@ -31,11 +31,21 @@ int hasNextToken();
 void analyzeSyntax();
 Node newNode(NodeType NodeType, Node* parent, Token* token);
 CompUnitNode* parseCompUnit();
+DeclNode* parseDecl(Node* parent);
+ConstDeclNode* parseConstDecl(Node* parent);
+ConstDefNode* parseConstDef(Node* parent);
+ConstInitValNode* parseConstInitVal(Node* parent);
+VarDeclNode* parseVarDecl(Node* parent);
+VarDefNode* parseVarDef(Node* parent);
+InitValNode* parseInitVal(Node* parent);
 MainFuncDefNode* parseMainFuncDef(Node* parent);
 FuncDefNode* parseFuncDef(Node* parent);
 FuncFParamsNode* parseFuncFParams(Node* parent);
 FuncFParamNode* parseFuncFParam(Node* parent);
 BlockNode* parseBlock(Node* parent);
-DeclNode* parseDecl(Node* parent);
+ConstExpNode* parseConstExp(Node* parent);
+ExpNode* parseExp(Node* parent);
 IdentNode* parseIdent(Node* parent);
+StringConstNode* parseStringConst(Node* parent);
+
 #endif

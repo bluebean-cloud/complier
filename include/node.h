@@ -66,6 +66,8 @@ typedef enum PrimaryNodeType {
     CHARACTER_PRIMARY,
 } PrimaryNodeType;
 
+typedef enum InitValType { INIT_VAR, INIT_ARR, INIT_STR } InitValType;
+
 typedef enum UnaryExpType { PRIMARY, CALL, UNARY } UnaryExpType;
 
 typedef enum TypeBorFuncType { INT, CHAR, VOID } TypeBorFuncType;
@@ -76,6 +78,7 @@ typedef struct DeclNode DeclNode;
 typedef struct FuncDefNode FuncDefNode;
 typedef struct MainFuncDefNode MainFuncDefNode;
 typedef struct ConstDeclNode ConstDeclNode;
+typedef struct ConstDefNode ConstDefNode;
 typedef struct ConstInitValNode ConstInitValNode;
 typedef struct ConstExpNode ConstExpNode;
 typedef struct VarDeclNode VarDeclNode;
@@ -148,8 +151,17 @@ struct ConstDeclNode {
     Vector* constDefs;
 };
 
+struct ConstDefNode {
+    Node node;
+    IdentNode* ident;
+    // 若不 NULL 则是数组
+    ConstExpNode* constExp;
+    ConstInitValNode* constInitVal;
+};
+
 struct ConstInitValNode {
     Node node;
+    InitValType initValType;
     ConstExpNode* constExp;
     Vector* constExps;
     StringConstNode* stringConst;
@@ -169,13 +181,15 @@ struct VarDeclNode {
 struct VarDefNode {
     Node node;
     IdentNode* ident;
-    ConstExpNode* size;
+    // 若不 NULL 则是数组
+    ConstExpNode* constExp;
     InitValNode* initVal;
     char* name;
 };
 
 struct InitValNode {
     Node node;
+    InitValType initValType;
     ExpNode* exp;
     Vector* exps;
     StringConstNode* stringConst;

@@ -21,16 +21,17 @@ CompUnitNode* parseCompUnit() {
     node->node = newNode(CompUnit, NULL, NULL);
     node->decls = createVector();
     node->funcDefs = createVector();
+    node->mainFuncDef = NULL;
     while (hasNextToken()) {
         if (peekToken(1)->type == MAINTK) {
             // mainFuncDef
-            node->mainFuncDef = parseMainFuncDef((Node*)node);
+            node->mainFuncDef = parseMainFuncDef(node);
         } else if (peekToken(2)->type == LPARENT) {
             // funcDef
-            pushVector(node->funcDefs, parseFuncDef((Node*)node));
+            pushVector(node->funcDefs, parseFuncDef(node));
         } else {
             // decl
-            pushVector(node->decls, parseDecl((Node*)node));
+            pushVector(node->decls, parseDecl(node));
         }
     }
     return node;
@@ -39,7 +40,145 @@ CompUnitNode* parseCompUnit() {
 DeclNode* parseDecl(Node* parent) {
     DeclNode* node = (DeclNode*)malloc(sizeof(DeclNode));
     node->node = newNode(Decl, parent, NULL);
+    node->constDecl = NULL;
+    node->VarDecl = NULL;
+    if (peekToken(0)->type == CONSTTK) {
+        node->constDecl = parseConstDecl(node);
+    } else {
+        node->VarDecl = parseVarDecl(node);
+    }
+    return node;
+}
 
+ConstDeclNode* parseConstDecl(Node* parent) {
+    ConstDeclNode* node = (ConstDeclNode*)malloc(sizeof(ConstDeclNode));
+    node->node = newNode(ConstDecl, parent, NULL);
+    nextToken(); // const
+    node->typeBType = nextToken()->type == CHARTK ? CHAR : INT;
+    node->constDefs = createVector();
+    pushVector(node->constDefs, parseConstDef(node));
+    while (peekToken(0)->type == COMMA) {
+        nextToken(); // ,
+        pushVector(node->constDefs, parseConstDef(node));
+    }
+    nextToken(); // ;
+    return node;
+}
+
+ConstDefNode* parseConstDef(Node* parent) {
+    ConstDefNode* node = (ConstDefNode*)malloc(sizeof(ConstDefNode));
+    node->node = newNode(ConstDef, parent, NULL);
+    node->ident = parseIdent(node);
+    node->constExp = NULL;
+    if (peekToken(0)->type == LBRACK) {
+        nextToken(); // [
+        node->constExp = parseConstExp(node);
+        nextToken(); // ]
+    }
+    nextToken(); // =
+    node->constInitVal = parseConstInitVal(node);
+    return node;
+}
+
+ConstInitValNode* parseConstInitVal(Node* parent) {
+    ConstInitValNode* node =
+        (ConstInitValNode*)malloc(sizeof(ConstInitValNode));
+    node->node = newNode(ConstInitVal, parent, NULL);
+    node->constExp = NULL;
+    node->constExps = NULL;
+    node->stringConst = NULL;
+    switch (peekToken(0)->type) {
+    case STRCON:
+        node->initValType = INIT_STR;
+        node->stringConst = parseStringConst(node);
+        break;
+    case LBRACE:
+        node->initValType = INIT_ARR;
+        node->constExps = createVector();
+        nextToken(); // {
+        if (peekToken(0)->type == RBRACE) {
+            nextToken(); // }
+            break;
+        }
+        pushVector(node->constExps, parseConstExp(node));
+        while (peekToken(0)->type == COMMA) {
+            nextToken(); // ,
+            pushVector(node->constExps, parseConstExp(node));
+        }
+        nextToken(); // }
+        break;
+    default:
+        node->initValType = INIT_VAR;
+        node->constExp = parseConstExp(node);
+        break;
+    }
+    return node;
+}
+
+VarDeclNode* parseVarDecl(Node* parent) {
+    VarDeclNode* node = (VarDeclNode*)malloc(sizeof(VarDeclNode));
+    node->node = newNode(VarDecl, parent, NULL);
+    node->typeBType = nextToken()->type == CHARTK ? CHAR : INT;
+    node->varDefs = createVector();
+    pushVector(node->varDefs, parseVarDef(node));
+    while (peekToken(0)->type == COMMA) {
+        nextToken(); // ,
+        pushVector(node->varDefs, parseVarDef(node));
+    }
+    nextToken(); // ;
+    return node;
+}
+
+VarDefNode* parseVarDef(Node* parent) {
+    VarDefNode* node = (VarDefNode*)malloc(sizeof(VarDefNode));
+    node->node = newNode(VarDef, parent, NULL);
+    node->constExp = NULL;
+    node->initVal = NULL;
+    node->ident = parseIdent(node);
+    node->name = node->ident->value;
+    if (peekToken(0)->type == LBRACK) {
+        nextToken(); // [
+        node->constExp = parseConstExp(node);
+        nextToken(); // ]
+    }
+    if (peekToken(0)->type == ASSIGN) {
+        nextToken(); // =
+        node->initVal = parseInitVal(node);
+    }
+    return node;
+}
+
+InitValNode* parseInitVal(Node* parent) {
+    InitValNode* node = (InitValNode*)malloc(sizeof(InitValNode));
+    node->node = newNode(InitVal, parent, NULL);
+    node->exp = NULL;
+    node->exps = NULL;
+    node->stringConst = NULL;
+    switch (peekToken(0)->type) {
+    case STRCON:
+        node->initValType = INIT_STR;
+        node->stringConst = parseStringConst(node);
+        break;
+    case LBRACE:
+        node->initValType = INIT_ARR;
+        node->exps = createVector();
+        nextToken(); // {
+        if (peekToken(0)->type == RBRACE) {
+            nextToken(); // }
+            break;
+        }
+        pushVector(node->exps, parseExp(node));
+        while (peekToken(0)->type == COMMA) {
+            nextToken(); // ,
+            pushVector(node->exps, parseExp(node));
+        }
+        nextToken(); // }
+        break;
+    default:
+        node->initValType = INIT_VAR;
+        node->exp = parseExp(node);
+        break;
+    }
     return node;
 }
 
@@ -50,7 +189,7 @@ MainFuncDefNode* parseMainFuncDef(Node* parent) {
     nextToken(); // main
     nextToken(); // (
     nextToken(); // )
-    node->block = parseBlock((Node*)node);
+    node->block = parseBlock(node);
     return node;
 }
 
@@ -66,14 +205,6 @@ FuncDefNode* parseFuncDef(Node* parent) {
     node->funcFParams = parseFuncFParams(node);
     nextToken(); // )
     node->block = parseBlock(node);
-    return node;
-}
-
-IdentNode* parseIdent(Node* parent) {
-    IdentNode* node = (IdentNode*)malloc(sizeof(IdentNode));
-    Token* curToken = nextToken();
-    node->node = newNode(Ident, parent, curToken);
-    node->value = curToken->content;
     return node;
 }
 
@@ -109,4 +240,24 @@ FuncFParamNode* parseFuncFParam(Node* parent) {
 }
 
 BlockNode* parseBlock(Node* parent) {
+}
+
+ConstExpNode* parseConstExp(Node* parent) {
+}
+
+ExpNode* parseExp(Node* parent) {
+}
+
+IdentNode* parseIdent(Node* parent) {
+    IdentNode* node = (IdentNode*)malloc(sizeof(IdentNode));
+    node->node = newNode(Ident, parent, nextToken());
+    node->value = ((Node*)node)->token->content;
+    return node;
+}
+
+StringConstNode* parseStringConst(Node* parent) {
+    StringConstNode* node = (StringConstNode*)malloc(sizeof(StringConstNode));
+    node->node = newNode(StringConst, parent, nextToken());
+    node->str = ((Node*)node)->token->content;
+    return node;
 }
