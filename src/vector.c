@@ -13,10 +13,11 @@ Vector* createVector() {
     return vector;
 }
 
+// 将数据推入数组。动态增长。void* 是史上最大骗局xd
 void pushVector(Vector* vector, void* item) {
     if (vector->length == vector->limit) {
-        void* newMemory = malloc(sizeof(void**) * (vector->limit * 2));
-        memcpy(newMemory, vector->values, sizeof(void**) * (vector->limit));
+        void** newMemory = (void**)malloc(sizeof(void*) * (vector->limit * 2));
+        memcpy(newMemory, vector->values, sizeof(void*) * (vector->limit));
         free(vector->values);
         vector->values = newMemory;
         vector->limit *= 2;

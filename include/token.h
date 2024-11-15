@@ -42,11 +42,11 @@ typedef enum TokenType {
     AND,
     // ||
     OR,
-    // +
+    // \+
     PLUS,
-    // -
+    // \-
     MINU,
-    // *
+    // \*
     MULT,
     // /
     DIV,
@@ -56,9 +56,9 @@ typedef enum TokenType {
     LSS,
     // <=
     LEQ,
-    // >
+    // \>
     GRE,
-    // >=
+    // \>=
     GEQ,
     // ==
     EQL,

@@ -12,6 +12,18 @@
     compiler 头文件，包含所有函数声明
 */
 
+#define FREE(NODE_TYPE, CONTENT)                                               \
+    if (((NODE_TYPE*)node)->CONTENT) {                                         \
+        freeNode(((NODE_TYPE*)node)->CONTENT);                                 \
+        free(((NODE_TYPE*)node)->CONTENT);                                     \
+        ((NODE_TYPE*)node)->CONTENT = NULL;                                    \
+    }
+#define FREE_V(NODE_TYPE, CONTENT, FLAG)                                       \
+    if (((NODE_TYPE*)node)->CONTENT) {                                         \
+        freeVector(((NODE_TYPE*)node)->CONTENT, FLAG);                         \
+        free(((NODE_TYPE*)node)->CONTENT);                                     \
+        ((NODE_TYPE*)node)->CONTENT = NULL;                                    \
+    }
 // Lexer
 void lexAnalyse();
 void getInt(Token* t);
@@ -30,6 +42,7 @@ int hasNextToken();
 // Parser
 void analyzeSyntax();
 Node newNode(NodeType NodeType, Node* parent, Token* token);
+void freeNode(Node* node);
 CompUnitNode* parseCompUnit();
 DeclNode* parseDecl(Node* parent);
 ConstDeclNode* parseConstDecl(Node* parent);
@@ -43,9 +56,26 @@ FuncDefNode* parseFuncDef(Node* parent);
 FuncFParamsNode* parseFuncFParams(Node* parent);
 FuncFParamNode* parseFuncFParam(Node* parent);
 BlockNode* parseBlock(Node* parent);
+BlockItemNode* parseBlockItem(Node* parent);
+StmtNode* parseStmt(Node* parent);
+ForStmtNode* parseForStmt(Node* parent);
 ConstExpNode* parseConstExp(Node* parent);
 ExpNode* parseExp(Node* parent);
+AddExpNode* parseAddExp(Node* parent);
+MulExpNode* parseMulExp(Node* parent);
+UnaryExpNode* parseUnaryExp(Node* parent);
+UnaryOpNode* parseUnaryOp(Node* parent);
+FuncRParamsNode* parseFuncRParams(Node* parent);
+PrimaryExpNode* parsePrimaryExp(Node* parent);
+CondNode* parseCond(Node* parent);
+LOrExpNode* parseLOrExp(Node* parent);
+LAndExpNode* parseLAndExp(Node* parent);
+EqExpNode* parseEqExp(Node* parent);
+RelExpNode* parseRelExp(Node* parent);
 IdentNode* parseIdent(Node* parent);
+LValNode* parseLVal(Node* parent);
 StringConstNode* parseStringConst(Node* parent);
+NumberNode* parseNumber(Node* parent);
+CharacterNode* parseCharacter(Node* parent);
 
 #endif

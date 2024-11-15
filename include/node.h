@@ -31,6 +31,7 @@ typedef enum NodeType {
     InitVal,
     LVal,
     Stmt,
+    ForStmt,
     Exp,
     AddExp,
     MulExp,
@@ -48,6 +49,8 @@ typedef enum NodeType {
 typedef enum StmtType {
     ASSIGN_STMT,
     EXP_STMT,
+    // 此处将 [Exp]';' 文法中 Exp 存在与否分为两种情况
+    EMPTY_STMT,
     BLOCK_STMT,
     IF_STMT,
     FOR_STMT,
@@ -129,7 +132,7 @@ struct CompUnitNode {
 struct DeclNode {
     Node node;
     ConstDeclNode* constDecl;
-    VarDeclNode* VarDecl;
+    VarDeclNode* varDecl;
 };
 
 struct FuncDefNode {
@@ -245,15 +248,15 @@ struct ExpNode {
 
 struct AddExpNode {
     Node node;
-    // PLUS | MINU
-    TokenType addType;
+    // 元素类型为 Token*
+    Vector* operators;
     Vector* mulExps;
 };
 
 struct MulExpNode {
     Node node;
-    // MULT | DIV | MOD
-    TokenType mulType;
+    // 元素类型为 Token*
+    Vector* operators;
     Vector* unaryExps;
 };
 
@@ -297,30 +300,26 @@ struct CondNode {
 
 struct LOrExpNode {
     Node node;
-    LAndExpNode* lAndExp;
-    LOrExpNode* lOrExp;
+    Vector* lAndExps;
 };
 
 struct LAndExpNode {
     Node node;
-    EqExpNode* eqExp;
-    LAndExpNode* lAndExp;
+    Vector* eqExps;
 };
 
 struct EqExpNode {
     Node node;
-    // EQL | NEQ
-    TokenType eqExpType;
-    RelExpNode* relExp;
-    EqExpNode* eqExp;
+    // 元素类型为 Token*
+    Vector* operators;
+    Vector* relExps;
 };
 
 struct RelExpNode {
     Node node;
-    // LSS | LEQ | GRE | GEQ
-    TokenType relExpType;
-    AddExpNode* addExp;
-    RelExpNode* relExp;
+    // 元素类型为 Token*
+    Vector* operators;
+    Vector* addExps;
 };
 
 struct NumberNode {
