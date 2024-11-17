@@ -11,19 +11,23 @@
 /*
     compiler 头文件，包含所有函数声明
 */
-
-#define FREE(NODE_TYPE, CONTENT)                                               \
-    if (((NODE_TYPE*)node)->CONTENT) {                                         \
-        freeNode((Node*)(((NODE_TYPE*)node)->CONTENT));                        \
-        free(((NODE_TYPE*)node)->CONTENT);                                     \
-        ((NODE_TYPE*)node)->CONTENT = NULL;                                    \
+#define TYPE2NODE(TYPE) TYPE##Node
+#define FREE(POINTER, CONTENT)                                                 \
+    if (((POINTER*)node)->CONTENT) {                                           \
+        freeNode((Node*)(((POINTER*)node)->CONTENT));                          \
+        free(((POINTER*)node)->CONTENT);                                       \
+        ((POINTER*)node)->CONTENT = NULL;                                      \
     }
-#define FREE_V(NODE_TYPE, CONTENT, FLAG)                                       \
-    if (((NODE_TYPE*)node)->CONTENT) {                                         \
-        freeVector(((NODE_TYPE*)node)->CONTENT, FLAG);                         \
-        free(((NODE_TYPE*)node)->CONTENT);                                     \
-        ((NODE_TYPE*)node)->CONTENT = NULL;                                    \
+#define FREE_V(POINTER, CONTENT, FLAG)                                         \
+    if (((POINTER*)node)->CONTENT) {                                           \
+        freeVector(((POINTER*)node)->CONTENT, FLAG);                           \
+        free(((POINTER*)node)->CONTENT);                                       \
+        ((POINTER*)node)->CONTENT = NULL;                                      \
     }
+#define PRINTCASE(NODE_TYPE)                                                        \
+    return;                                                                    \
+    case NODE_TYPE:                                                            \
+        TYPE2NODE(NODE_TYPE)* node##NODE_TYPE = (TYPE2NODE(NODE_TYPE)*)node;
 // Lexer
 void lexAnalyse();
 void getInt(Token* t);
@@ -44,6 +48,7 @@ void analyzeSyntax();
 Node newNode(NodeType NodeType, Node* parent, Token* token);
 void freeVector(Vector* vector, int type);
 void freeNode(Node* node);
+void printNodeTree(Node* node);
 CompUnitNode* parseCompUnit();
 DeclNode* parseDecl(Node* parent);
 ConstDeclNode* parseConstDecl(Node* parent);

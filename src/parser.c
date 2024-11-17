@@ -69,6 +69,7 @@ ConstDefNode* parseConstDef(Node* parent) {
     ConstDefNode* node = (ConstDefNode*)malloc(sizeof(ConstDefNode));
     node->node = newNode(ConstDef, parent, NULL);
     node->ident = parseIdent((Node*)node);
+    node->name = node->ident->value;
     node->constExp = NULL;
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
@@ -200,7 +201,8 @@ FuncDefNode* parseFuncDef(Node* parent) {
                          peekToken(0)->type == INTTK  ? INT :
                                                         VOID;
     nextToken(); // int | char | void
-    node->funcName = parseIdent((Node*)node);
+    node->ident = parseIdent((Node*)node);
+    node->funcName = node->ident->value;
     nextToken(); // (
     node->funcFParams = parseFuncFParams((Node*)node);
     nextToken(); // )
@@ -625,7 +627,7 @@ void freeNode(Node* node) {
         FREE(DeclNode, varDecl)
         return;
     case FuncDef:
-        FREE(FuncDefNode, funcName)
+        FREE(FuncDefNode, ident)
         FREE(FuncDefNode, funcFParams)
         FREE(FuncDefNode, block)
         return;
@@ -744,6 +746,81 @@ void freeNode(Node* node) {
     case Number:
     case Character:
     case StringConst:
+    default:
+        return;
+    }
+}
+
+char typeToPrint[][10] = {"INTTK int", "CHARTK char", "VOIDTK void"};
+
+void printNodeTree(Node* node) {
+    if (node == NULL) {
+        return;
+    }
+    switch (node->nodeType) {
+        PRINTCASE(CompUnit)
+        for (int i = 0; i < nodeCompUnit->decls->length; i++) {
+            printNodeTree((Node*)nodeCompUnit->decls->values[i]);
+        }
+        for (int i = 0; i < nodeCompUnit->funcDefs->length; i++) {
+            printNodeTree((Node*)nodeCompUnit->funcDefs->values[i]);
+        }
+        printNodeTree(nodeCompUnit->mainFuncDef);
+        printf("<CompUnit>\n");
+        PRINTCASE(Decl)
+        if (nodeDecl->constDecl) {
+            printNodeTree((Node*)nodeDecl->constDecl);
+        }
+        if (nodeDecl->varDecl) {
+            printNodeTree((Node*)nodeDecl->varDecl);
+        }
+        PRINTCASE(FuncDef)
+        printf("%s\n<FuncType>\nIDENFR %s\nLPARENT (\n",
+               typeToPrint[nodeFuncDef->typeFuncType], nodeFuncDef->funcName);
+        printNodeTree((Node*)nodeFuncDef->funcFParams);
+        printf("RPARENT )\n");
+        printNodeTree((Node*)nodeFuncDef->block);
+        PRINTCASE(MainFuncDef)
+        printf("INTTK int\nMAINTK main\nLPARENT (\nRPARENT )\n");
+        printNodeTree(nodeMainFuncDef->block);
+        PRINTCASE(ConstDecl)
+        printf("CONSTTK const\n%s\n", typeToPrint[nodeConstDecl->typeBType]);
+        for (int i = 0; i < nodeConstDecl->constDefs->length; i++) {
+            if (i) {
+                printf("COMMA ,\n");
+            }
+            printNodeTree((Node*)nodeConstDecl->constDefs->values[i]);
+        }
+        printf("SEMICN ;\n<ConstDecl>\n");
+        PRINTCASE(ConstDef)
+        printf("IDENFR %s\n", nodeConstDef->name);
+        if (nodeConstDef->constExp) {
+            printf("LBRACK [\n");
+            printNodeTree((Node*)nodeConstDef->constExp);
+            printf("RBRACK ]\n");
+        }
+        printf("ASSIGN =\n");
+        printNodeTree((Node*)nodeConstDef->constInitVal);
+        printf("ConstDef\n");
+        PRINTCASE(ConstInitVal)
+        if (nodeConstInitVal->constExp) {
+            printNodeTree(nodeConstInitVal->constExp);
+        } else if (nodeConstInitVal->stringConst) {
+            printNodeTree(nodeConstInitVal->stringConst);
+        } else {
+            printf("LBRACE {\n");
+            for (int i = 0; i < nodeConstInitVal->constExps->length; i++) {
+                if (i) {
+                    printf("COMMA ,\n");
+                    printNodeTree((Node*)nodeConstInitVal->constExps->values[i]);
+                }
+            }
+            printf("RBRACE {\n");
+        }
+        printf("<ConstInitVal>");
+        PRINTCASE(ConstExp)
+        printNodeTree((Node*)nodeConstExp->addExp);
+        printf("<ConstExp>\n");
     default:
         return;
     }

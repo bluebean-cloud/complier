@@ -138,9 +138,10 @@ struct DeclNode {
 struct FuncDefNode {
     Node node;
     TypeBorFuncType typeFuncType;
-    IdentNode* funcName;
+    IdentNode* ident;
     FuncFParamsNode* funcFParams;
     BlockNode* block;
+    char* funcName;
 };
 
 struct MainFuncDefNode {
@@ -160,6 +161,7 @@ struct ConstDefNode {
     // 若不 NULL 则是数组
     ConstExpNode* constExp;
     ConstInitValNode* constInitVal;
+    char* name;
 };
 
 struct ConstInitValNode {
