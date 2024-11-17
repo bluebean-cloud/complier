@@ -25,13 +25,13 @@ CompUnitNode* parseCompUnit() {
     while (hasNextToken()) {
         if (peekToken(1)->type == MAINTK) {
             // mainFuncDef
-            node->mainFuncDef = parseMainFuncDef(node);
+            node->mainFuncDef = parseMainFuncDef((Node*)node);
         } else if (peekToken(2)->type == LPARENT) {
             // funcDef
-            pushVector(node->funcDefs, parseFuncDef(node));
+            pushVector(node->funcDefs, parseFuncDef((Node*)node));
         } else {
             // decl
-            pushVector(node->decls, parseDecl(node));
+            pushVector(node->decls, parseDecl((Node*)node));
         }
     }
     return node;
@@ -43,9 +43,9 @@ DeclNode* parseDecl(Node* parent) {
     node->constDecl = NULL;
     node->varDecl = NULL;
     if (peekToken(0)->type == CONSTTK) {
-        node->constDecl = parseConstDecl(node);
+        node->constDecl = parseConstDecl((Node*)node);
     } else {
-        node->varDecl = parseVarDecl(node);
+        node->varDecl = parseVarDecl((Node*)node);
     }
     return node;
 }
@@ -56,10 +56,10 @@ ConstDeclNode* parseConstDecl(Node* parent) {
     nextToken(); // const
     node->typeBType = nextToken()->type == CHARTK ? CHAR : INT;
     node->constDefs = createVector();
-    pushVector(node->constDefs, parseConstDef(node));
+    pushVector(node->constDefs, parseConstDef((Node*)node));
     while (peekToken(0)->type == COMMA) {
         nextToken(); // ,
-        pushVector(node->constDefs, parseConstDef(node));
+        pushVector(node->constDefs, parseConstDef((Node*)node));
     }
     nextToken(); // ;
     return node;
@@ -68,15 +68,15 @@ ConstDeclNode* parseConstDecl(Node* parent) {
 ConstDefNode* parseConstDef(Node* parent) {
     ConstDefNode* node = (ConstDefNode*)malloc(sizeof(ConstDefNode));
     node->node = newNode(ConstDef, parent, NULL);
-    node->ident = parseIdent(node);
+    node->ident = parseIdent((Node*)node);
     node->constExp = NULL;
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
-        node->constExp = parseConstExp(node);
+        node->constExp = parseConstExp((Node*)node);
         nextToken(); // ]
     }
     nextToken(); // =
-    node->constInitVal = parseConstInitVal(node);
+    node->constInitVal = parseConstInitVal((Node*)node);
     return node;
 }
 
@@ -90,7 +90,7 @@ ConstInitValNode* parseConstInitVal(Node* parent) {
     switch (peekToken(0)->type) {
     case STRCON:
         node->initValType = INIT_STR;
-        node->stringConst = parseStringConst(node);
+        node->stringConst = parseStringConst((Node*)node);
         break;
     case LBRACE:
         node->initValType = INIT_ARR;
@@ -100,16 +100,16 @@ ConstInitValNode* parseConstInitVal(Node* parent) {
             nextToken(); // }
             break;
         }
-        pushVector(node->constExps, parseConstExp(node));
+        pushVector(node->constExps, parseConstExp((Node*)node));
         while (peekToken(0)->type == COMMA) {
             nextToken(); // ,
-            pushVector(node->constExps, parseConstExp(node));
+            pushVector(node->constExps, parseConstExp((Node*)node));
         }
         nextToken(); // }
         break;
     default:
         node->initValType = INIT_VAR;
-        node->constExp = parseConstExp(node);
+        node->constExp = parseConstExp((Node*)node);
         break;
     }
     return node;
@@ -120,10 +120,10 @@ VarDeclNode* parseVarDecl(Node* parent) {
     node->node = newNode(VarDecl, parent, NULL);
     node->typeBType = nextToken()->type == CHARTK ? CHAR : INT;
     node->varDefs = createVector();
-    pushVector(node->varDefs, parseVarDef(node));
+    pushVector(node->varDefs, parseVarDef((Node*)node));
     while (peekToken(0)->type == COMMA) {
         nextToken(); // ,
-        pushVector(node->varDefs, parseVarDef(node));
+        pushVector(node->varDefs, parseVarDef((Node*)node));
     }
     nextToken(); // ;
     return node;
@@ -134,16 +134,16 @@ VarDefNode* parseVarDef(Node* parent) {
     node->node = newNode(VarDef, parent, NULL);
     node->constExp = NULL;
     node->initVal = NULL;
-    node->ident = parseIdent(node);
+    node->ident = parseIdent((Node*)node);
     node->name = node->ident->value;
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
-        node->constExp = parseConstExp(node);
+        node->constExp = parseConstExp((Node*)node);
         nextToken(); // ]
     }
     if (peekToken(0)->type == ASSIGN) {
         nextToken(); // =
-        node->initVal = parseInitVal(node);
+        node->initVal = parseInitVal((Node*)node);
     }
     return node;
 }
@@ -157,7 +157,7 @@ InitValNode* parseInitVal(Node* parent) {
     switch (peekToken(0)->type) {
     case STRCON:
         node->initValType = INIT_STR;
-        node->stringConst = parseStringConst(node);
+        node->stringConst = parseStringConst((Node*)node);
         break;
     case LBRACE:
         node->initValType = INIT_ARR;
@@ -167,16 +167,16 @@ InitValNode* parseInitVal(Node* parent) {
             nextToken(); // }
             break;
         }
-        pushVector(node->exps, parseExp(node));
+        pushVector(node->exps, parseExp((Node*)node));
         while (peekToken(0)->type == COMMA) {
             nextToken(); // ,
-            pushVector(node->exps, parseExp(node));
+            pushVector(node->exps, parseExp((Node*)node));
         }
         nextToken(); // }
         break;
     default:
         node->initValType = INIT_VAR;
-        node->exp = parseExp(node);
+        node->exp = parseExp((Node*)node);
         break;
     }
     return node;
@@ -189,7 +189,7 @@ MainFuncDefNode* parseMainFuncDef(Node* parent) {
     nextToken(); // main
     nextToken(); // (
     nextToken(); // )
-    node->block = parseBlock(node);
+    node->block = parseBlock((Node*)node);
     return node;
 }
 
@@ -200,11 +200,11 @@ FuncDefNode* parseFuncDef(Node* parent) {
                          peekToken(0)->type == INTTK  ? INT :
                                                         VOID;
     nextToken(); // int | char | void
-    node->funcName = parseIdent(node);
+    node->funcName = parseIdent((Node*)node);
     nextToken(); // (
-    node->funcFParams = parseFuncFParams(node);
+    node->funcFParams = parseFuncFParams((Node*)node);
     nextToken(); // )
-    node->block = parseBlock(node);
+    node->block = parseBlock((Node*)node);
     return node;
 }
 
@@ -215,10 +215,10 @@ FuncFParamsNode* parseFuncFParams(Node* parent) {
     if (peekToken(0)->type == RPARENT) {
         return node;
     }
-    pushVector(node->funcFParams, parseFuncFParam(node));
+    pushVector(node->funcFParams, parseFuncFParam((Node*)node));
     while (peekToken(0)->type == COMMA) {
         nextToken(); // ,
-        pushVector(node->funcFParams, parseFuncFParam(node));
+        pushVector(node->funcFParams, parseFuncFParam((Node*)node));
     }
     return node;
 }
@@ -227,7 +227,7 @@ FuncFParamNode* parseFuncFParam(Node* parent) {
     FuncFParamNode* node = (FuncFParamNode*)malloc(sizeof(FuncFParamNode));
     node->node = newNode(FuncFParam, parent, NULL);
     node->typeBType = nextToken()->type == CHARTK ? CHAR : INT;
-    node->ident = parseIdent(node);
+    node->ident = parseIdent((Node*)node);
     node->name = node->ident->value;
     if (peekToken(0)->type == LBRACK) {
         node->isArray = 1;
@@ -245,7 +245,7 @@ BlockNode* parseBlock(Node* parent) {
     node->blockItems = createVector();
     nextToken(); // {
     while (peekToken(0)->type != RBRACE) {
-        pushVector(node->blockItems, parseBlockItem(node));
+        pushVector(node->blockItems, parseBlockItem((Node*)node));
     }
     nextToken(); // }
     return node;
@@ -257,9 +257,9 @@ BlockItemNode* parseBlockItem(Node* parent) {
     node->decl = NULL;
     node->stmt = NULL;
     if (peekToken(0)->type == INTTK || peekToken(0)->type == CONSTTK) {
-        node->decl = parseDecl(node);
+        node->decl = parseDecl((Node*)node);
     } else {
-        node->stmt = parseStmt(node);
+        node->stmt = parseStmt((Node*)node);
     }
     return node;
 }
@@ -274,12 +274,12 @@ StmtNode* parseStmt(Node* parent) {
         node->stmtType = IF_STMT;
         nextToken(); // if
         nextToken(); // (
-        node->cond = parseCond(node);
+        node->cond = parseCond((Node*)node);
         nextToken(); // )
-        node->ifStmt = parseStmt(node);
+        node->ifStmt = parseStmt((Node*)node);
         if (peekToken(0)->type == ELSETK) {
             nextToken(); // else
-            node->elStmt = parseStmt(node);
+            node->elStmt = parseStmt((Node*)node);
         }
         return node;
     case FORTK:
@@ -287,18 +287,18 @@ StmtNode* parseStmt(Node* parent) {
         nextToken(); // for
         nextToken(); // (
         if (peekToken(0)->type != SEMICN) {
-            node->forStmt1 = parseForStmt(node);
+            node->forStmt1 = parseForStmt((Node*)node);
         }
         nextToken(); // ;
         if (peekToken(0)->type != SEMICN) {
-            node->cond = parseCond(node);
+            node->cond = parseCond((Node*)node);
         }
         nextToken(); // ;
         if (peekToken(0)->type != RPARENT) {
-            node->forStmt2 = parseForStmt(node);
+            node->forStmt2 = parseForStmt((Node*)node);
         }
         nextToken(); // )
-        node->forStmt = parseStmt(node);
+        node->forStmt = parseStmt((Node*)node);
         return node;
     case BREAKTK:
         node->stmtType = BREAK_STMT;
@@ -314,7 +314,7 @@ StmtNode* parseStmt(Node* parent) {
         node->stmtType = RETURN_STMT;
         nextToken(); // return
         if (peekToken(0)->type != SEMICN) {
-            node->exp = parseExp(node);
+            node->exp = parseExp((Node*)node);
         }
         nextToken(); // ;
         return node;
@@ -323,17 +323,17 @@ StmtNode* parseStmt(Node* parent) {
         node->exps = createVector();
         nextToken(); // printf
         nextToken(); // (
-        node->stringConst = parseStringConst(node);
+        node->stringConst = parseStringConst((Node*)node);
         while (peekToken(0)->type == COMMA) {
             nextToken(); //,
-            pushVector(node->exps, parseExp(node));
+            pushVector(node->exps, parseExp((Node*)node));
         }
         nextToken(); // )
         nextToken(); // ;
         return node;
     case LBRACE:
         node->stmtType = BLOCK_STMT;
-        node->block = parseBlock(node);
+        node->block = parseBlock((Node*)node);
         return node;
     case SEMICN:
         node->stmtType = EMPTY_STMT;
@@ -342,7 +342,7 @@ StmtNode* parseStmt(Node* parent) {
         break;
     }
     Token* tmpToken = curToken;
-    node->exp = parseExp(node);
+    node->exp = parseExp((Node*)node);
     if (peekToken(0)->type != ASSIGN) {
         node->stmtType = EXP_STMT;
         nextToken(); // ;
@@ -350,25 +350,28 @@ StmtNode* parseStmt(Node* parent) {
     }
     // exp 的下一符号为 =，说明为赋值语句，进行回溯
     curToken = tmpToken;
-    freeNode(node->exp);
+    freeNode((Node*)(node->exp));
 
-    node->lVal = parseLVal(node);
+    node->lVal = parseLVal((Node*)node);
     nextToken(); // =
     switch (peekToken(0)->type) {
     case GETINTTK:
         node->stmtType = GETINT_STMT;
-        nextToken();    // getint
-        nextToken();    // (
-        nextToken();    // )
-        nextToken();    // ;
+        nextToken(); // getint
+        nextToken(); // (
+        nextToken(); // )
+        nextToken(); // ;
+        break;
     case GETCHARTK:
         node->stmtType = GETCHAR_STMT;
         nextToken(); // getchar
         nextToken(); // (
         nextToken(); // )
         nextToken(); // ;
+        break;
     default:
-        node->exp = parseExp(node);
+        node->exp = ASSIGN_STMT;
+        node->exp = parseExp((Node*)node);
         nextToken(); // ;
         break;
     }
@@ -378,23 +381,23 @@ StmtNode* parseStmt(Node* parent) {
 ForStmtNode* parseForStmt(Node* parent) {
     ForStmtNode* node = (ForStmtNode*)malloc(sizeof(ForStmtNode));
     node->node = newNode(ForStmt, parent, NULL);
-    node->lVal = parseLVal(node);
+    node->lVal = parseLVal((Node*)node);
     nextToken(); // =
-    node->exp = parseExp(node);
+    node->exp = parseExp((Node*)node);
     return node;
 }
 
 ConstExpNode* parseConstExp(Node* parent) {
     ConstExpNode* node = (ConstExpNode*)malloc(sizeof(ConstExpNode));
     node->node = newNode(ConstExp, parent, NULL);
-    node->addExp = parseAddExp(node);
+    node->addExp = parseAddExp((Node*)node);
     return node;
 }
 
 ExpNode* parseExp(Node* parent) {
     ExpNode* node = (ExpNode*)malloc(sizeof(ExpNode));
     node->node = newNode(Exp, parent, NULL);
-    node->addExp = parseAddExp(node);
+    node->addExp = parseAddExp((Node*)node);
     return node;
 }
 
@@ -403,10 +406,10 @@ AddExpNode* parseAddExp(Node* parent) {
     node->node = newNode(AddExp, parent, NULL);
     node->mulExps = createVector();
     node->operators = createVector();
-    pushVector(node->mulExps, parseMulExp(node));
+    pushVector(node->mulExps, parseMulExp((Node*)node));
     while (peekToken(0)->type == PLUS || peekToken(0)->type == MINU) {
         pushVector(node->operators, nextToken());
-        pushVector(node->mulExps, parseMulExp(node));
+        pushVector(node->mulExps, parseMulExp((Node*)node));
     }
     return node;
 }
@@ -416,11 +419,11 @@ MulExpNode* parseMulExp(Node* parent) {
     node->node = newNode(MulExp, parent, NULL);
     node->unaryExps = createVector();
     node->operators = createVector();
-    pushVector(node->unaryExps, parseUnaryExp(node));
+    pushVector(node->unaryExps, parseUnaryExp((Node*)node));
     while (peekToken(0)->type == MULT || peekToken(0)->type == DIV ||
            peekToken(0)->type == MOD) {
         pushVector(node->operators, nextToken());
-        pushVector(node->unaryExps, parseUnaryExp(node));
+        pushVector(node->unaryExps, parseUnaryExp((Node*)node));
     }
     return node;
 }
@@ -429,24 +432,24 @@ UnaryExpNode* parseUnaryExp(Node* parent) {
     UnaryExpNode* node = (UnaryExpNode*)malloc(sizeof(UnaryExpNode));
     memset(node, 0, sizeof(UnaryExpNode));
     node->node = newNode(UnaryExp, parent, NULL);
-    if (peekToken(0)->type == IDENFR) {
+    if (peekToken(1)->type == LPARENT) {
         node->unaryExpType = CALL;
-        node->ident = parseIdent(node);
+        node->ident = parseIdent((Node*)node);
         node->name = node->ident->value;
         nextToken(); // (
-        node->funcRParams = parseFuncRParams(node);
+        node->funcRParams = parseFuncRParams((Node*)node);
         nextToken(); // )
         return node;
     }
     if (peekToken(0)->type == PLUS || peekToken(0)->type == MINU ||
         peekToken(0)->type == NOT) {
         node->unaryExpType = UNARY;
-        node->unaryOp = parseUnaryOp(node);
-        node->unaryExp = parseUnaryExp(node);
+        node->unaryOp = parseUnaryOp((Node*)node);
+        node->unaryExp = parseUnaryExp((Node*)node);
         return node;
     }
     node->unaryExpType = PRIMARY;
-    node->primaryExp = parsePrimaryExp(node);
+    node->primaryExp = parsePrimaryExp((Node*)node);
     return node;
 }
 
@@ -464,10 +467,10 @@ FuncRParamsNode* parseFuncRParams(Node* parent) {
     if (peekToken(0)->type == RPARENT) {
         return node;
     }
-    pushVector(node->exps, parseExp(node));
+    pushVector(node->exps, parseExp((Node*)node));
     while (peekToken(0)->type == COMMA) {
         nextToken(); // ,
-        pushVector(node->exps, parseExp(node));
+        pushVector(node->exps, parseExp((Node*)node));
     }
     return node;
 }
@@ -478,30 +481,30 @@ PrimaryExpNode* parsePrimaryExp(Node* parent) {
     node->node = newNode(PrimaryExp, parent, NULL);
     if (peekToken(0)->type == INTCON) {
         node->primaryType = NUMBER_PRIMARY;
-        node->number = parseNumber(node);
+        node->number = parseNumber((Node*)node);
         return node;
     }
     if (peekToken(0)->type == CHRCON) {
         node->primaryType = CHARACTER_PRIMARY;
-        node->character = parseCharacter(node);
+        node->character = parseCharacter((Node*)node);
         return node;
     }
     if (peekToken(0)->type == LPARENT) {
         node->primaryType = EXP_PRIMARY;
         nextToken(); // (
-        node->exp = parseExp(node);
+        node->exp = parseExp((Node*)node);
         nextToken(); // )
         return node;
     }
     node->primaryType = LVAL_PRIMARY;
-    node->lVal = parseLVal(node);
+    node->lVal = parseLVal((Node*)node);
     return node;
 }
 
 CondNode* parseCond(Node* parent) {
     CondNode* node = (CondNode*)malloc(sizeof(CondNode));
     node->node = newNode(Cond, parent, NULL);
-    node->lOrExp = parseLOrExp(node);
+    node->lOrExp = parseLOrExp((Node*)node);
     return node;
 }
 
@@ -509,10 +512,10 @@ LOrExpNode* parseLOrExp(Node* parent) {
     LOrExpNode* node = (LOrExpNode*)malloc(sizeof(LOrExpNode));
     node->node = newNode(LOrExp, parent, NULL);
     node->lAndExps = createVector();
-    pushVector(node->lAndExps, parseLAndExp(node));
+    pushVector(node->lAndExps, parseLAndExp((Node*)node));
     while (peekToken(0)->type == OR) {
         nextToken(); // ||
-        pushVector(node->lAndExps, parseLAndExp(node));
+        pushVector(node->lAndExps, parseLAndExp((Node*)node));
     }
     return node;
 }
@@ -521,10 +524,10 @@ LAndExpNode* parseLAndExp(Node* parent) {
     LAndExpNode* node = (LAndExpNode*)malloc(sizeof(LAndExpNode));
     node->node = newNode(LAndExp, parent, NULL);
     node->eqExps = createVector();
-    pushVector(node->eqExps, parseEqExp(node));
+    pushVector(node->eqExps, parseEqExp((Node*)node));
     while (peekToken(0)->type == AND) {
         nextToken(); // &&
-        pushVector(node->eqExps, parseEqExp(node));
+        pushVector(node->eqExps, parseEqExp((Node*)node));
     }
     return node;
 }
@@ -534,10 +537,10 @@ EqExpNode* parseEqExp(Node* parent) {
     node->node = newNode(EqExp, parent, NULL);
     node->relExps = createVector();
     node->operators = createVector();
-    pushVector(node->relExps, parseRelExp(node));
+    pushVector(node->relExps, parseRelExp((Node*)node));
     while (peekToken(0)->type == EQL || peekToken(0)->type == NEQ) {
         pushVector(node->operators, nextToken()); // == || !=
-        pushVector(node->relExps, parseRelExp(node));
+        pushVector(node->relExps, parseRelExp((Node*)node));
     }
     return node;
 }
@@ -547,11 +550,11 @@ RelExpNode* parseRelExp(Node* parent) {
     node->node = newNode(RelExp, parent, NULL);
     node->addExps = createVector();
     node->operators = createVector();
-    pushVector(node->addExps, parseAddExp(node));
+    pushVector(node->addExps, parseAddExp((Node*)node));
     TokenType type = peekToken(0)->type;
     while (type == LSS || type == LEQ || type == GRE || type == GEQ) {
         pushVector(node->operators, nextToken());
-        pushVector(node->addExps, parseAddExp(node));
+        pushVector(node->addExps, parseAddExp((Node*)node));
         type = peekToken(0)->type;
     }
     return node;
@@ -568,10 +571,10 @@ LValNode* parseLVal(Node* parent) {
     LValNode* node = (LValNode*)malloc(sizeof(LValNode));
     node->node = newNode(LVal, parent, NULL);
     node->exp = NULL;
-    node->ident = parseIdent(node);
+    node->ident = parseIdent((Node*)node);
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
-        node->exp = parseExp(node);
+        node->exp = parseExp((Node*)node);
         nextToken(); // ]
     }
     return node;
@@ -623,7 +626,7 @@ void freeNode(Node* node) {
         return;
     case FuncDef:
         FREE(FuncDefNode, funcName)
-        FREE_V(FuncDefNode, funcFParams, 1)
+        FREE(FuncDefNode, funcFParams)
         FREE(FuncDefNode, block)
         return;
     case MainFuncDef:
@@ -638,7 +641,6 @@ void freeNode(Node* node) {
         FREE(ConstDefNode, constInitVal)
         return;
     case ConstInitVal:
-        FREE(ConstInitValNode, initValType)
         FREE(ConstInitValNode, constExp)
         FREE_V(ConstInitValNode, constExps, 1)
         FREE(ConstInitValNode, stringConst)

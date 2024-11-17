@@ -139,7 +139,7 @@ struct FuncDefNode {
     Node node;
     TypeBorFuncType typeFuncType;
     IdentNode* funcName;
-    Vector* funcFParams;
+    FuncFParamsNode* funcFParams;
     BlockNode* block;
 };
 

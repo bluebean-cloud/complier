@@ -14,7 +14,7 @@
 
 #define FREE(NODE_TYPE, CONTENT)                                               \
     if (((NODE_TYPE*)node)->CONTENT) {                                         \
-        freeNode(((NODE_TYPE*)node)->CONTENT);                                 \
+        freeNode((Node*)(((NODE_TYPE*)node)->CONTENT));                        \
         free(((NODE_TYPE*)node)->CONTENT);                                     \
         ((NODE_TYPE*)node)->CONTENT = NULL;                                    \
     }
@@ -42,6 +42,7 @@ int hasNextToken();
 // Parser
 void analyzeSyntax();
 Node newNode(NodeType NodeType, Node* parent, Token* token);
+void freeVector(Vector* vector, int type);
 void freeNode(Node* node);
 CompUnitNode* parseCompUnit();
 DeclNode* parseDecl(Node* parent);

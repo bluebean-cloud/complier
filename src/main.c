@@ -3,6 +3,7 @@
 // just go go
 int main() {
     lexAnalyse();
-    printTokens();
+    analyzeSyntax();
+    printf("end\n");
     return 0;
 }
