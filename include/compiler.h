@@ -24,9 +24,9 @@
         free(((POINTER*)node)->CONTENT);                                       \
         ((POINTER*)node)->CONTENT = NULL;                                      \
     }
-#define PRINTCASE(NODE_TYPE)                                                        \
+#define PRINTCASE(NODE_TYPE)                                                   \
     return;                                                                    \
-    case NODE_TYPE:                                                            \
+    case NODE_TYPE:;                                                           \
         TYPE2NODE(NODE_TYPE)* node##NODE_TYPE = (TYPE2NODE(NODE_TYPE)*)node;
 // Lexer
 void lexAnalyse();
