@@ -188,6 +188,7 @@ struct VarDefNode {
     IdentNode* ident;
     // 若不 NULL 则是数组
     ConstExpNode* constExp;
+    // 不为 NULL 则有初始化
     InitValNode* initVal;
     char* name;
 };
@@ -204,6 +205,7 @@ struct LValNode {
     Node node;
     IdentNode* ident;
     ExpNode* exp;
+    char* name;
 };
 
 struct IdentNode {

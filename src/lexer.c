@@ -27,11 +27,10 @@ const char tokenString[][15] = {
 Token* tokenRoot;
 Token* curToken;
 char curStr[1024];
-FILE* input;
-FILE* output;
+extern FILE* input;
+extern FILE* output;
 int curLine;
-const char inputFile[] = "testfile.txt";
-const char outputFile[] = "ans.txt";
+
 
 // peek Token relative to curToken
 Token* peekToken(int step) {
@@ -57,7 +56,6 @@ Token* nextToken() {
 // 进行词法分析
 void lexAnalyse() {
     tokenRoot = curToken = NULL;
-    input = fopen(inputFile, "rb");
     int c;
     curLine = 1;
     while ((c = fgetc(input)) != EOF) {
@@ -80,7 +78,6 @@ void lexAnalyse() {
         }
     }
     curToken = tokenRoot;
-    fclose(input);
 }
 
 // add token to tail of tokens
@@ -289,13 +286,11 @@ void handleComments(int c) {
 
 // print token linked list
 void printTokens() {
-    output = fopen(outputFile, "w");
     Token* tmp = tokenRoot;
     while (tmp != NULL) {
         fprintf(output, "%s %s\n", tokenString[tmp->type], tmp->content);
         tmp = tmp->next;
     }
-    fclose(output);
 }
 
 int hasNextToken() {
