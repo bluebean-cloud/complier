@@ -204,6 +204,10 @@ void getOthers(Token* t) {
     }
     if (strchr("&|", c) != NULL) {
         curStr[len++] = fgetc(input);
+        if (curStr[1] != curStr[0]) {
+            addError(curLine, 'a');
+            fseek(input, -1, SEEK_CUR);
+        }
         curStr[len] = '\0';
         t->line = curLine;
         t->content = (char*)malloc(sizeof(char) * (len + 1));

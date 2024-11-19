@@ -2,11 +2,13 @@
 
 // parser
 CompUnitNode* nodesRoot;
-
+extern int errOccur;
 // 开始进行语法分析
 void analyzeSyntax() {
     nodesRoot = parseCompUnit();
-    printNodeTree((Node*)nodesRoot);
+    if (!errOccur) {
+        printNodeTree((Node*)nodesRoot);
+    }
 }
 
 Node newNode(NodeType NodeType, Node* parent, Token* token) {

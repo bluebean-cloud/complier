@@ -3,6 +3,7 @@
 
 #include "node.h"
 #include "token.h"
+#include "error.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
