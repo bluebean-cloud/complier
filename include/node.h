@@ -334,6 +334,7 @@ struct NumberNode {
 struct CharacterNode {
     Node node;
     int value;
+    char* str;
 };
 
 struct ForStmtNode {
