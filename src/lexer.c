@@ -31,15 +31,17 @@ extern FILE* input;
 extern FILE* output;
 int curLine;
 
-
 // peek Token relative to curToken
 Token* peekToken(int step) {
     Token* tmp = curToken;
     if (step < 0) {
-        return NULL;
-    }
-    while (step-- && tmp) {
-        tmp = tmp->next;
+        while (step++ && tmp) {
+            tmp = tmp->pre;
+        }
+    } else {
+        while (step-- && tmp) {
+            tmp = tmp->next;
+        }
     }
     return tmp;
 }

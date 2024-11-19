@@ -64,6 +64,10 @@ ConstDeclNode* parseConstDecl(Node* parent) {
         nextToken(); // ,
         pushVector(node->constDefs, parseConstDef((Node*)node));
     }
+    if (peekToken(0)->type != SEMICN) {
+        addError(peekToken(-1)->line, 'i');
+        return node;
+    }
     nextToken(); // ;
     return node;
 }
@@ -77,7 +81,11 @@ ConstDefNode* parseConstDef(Node* parent) {
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
         node->constExp = parseConstExp((Node*)node);
-        nextToken(); // ]
+        if (peekToken(0)->type == RBRACK) {
+            nextToken(); // ]
+        } else {
+            addError(peekToken(-1)->line, 'k');
+        }
     }
     nextToken(); // =
     node->constInitVal = parseConstInitVal((Node*)node);
@@ -129,6 +137,10 @@ VarDeclNode* parseVarDecl(Node* parent) {
         nextToken(); // ,
         pushVector(node->varDefs, parseVarDef((Node*)node));
     }
+    if (peekToken(0)->type != SEMICN) {
+        addError(peekToken(-1)->line, 'i');
+        return node;
+    }
     nextToken(); // ;
     return node;
 }
@@ -143,7 +155,11 @@ VarDefNode* parseVarDef(Node* parent) {
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
         node->constExp = parseConstExp((Node*)node);
-        nextToken(); // ]
+        if (peekToken(0)->type == RBRACK) {
+            nextToken(); // ]
+        } else {
+            addError(peekToken(-1)->line, 'k');
+        }
     }
     if (peekToken(0)->type == ASSIGN) {
         nextToken(); // =
@@ -192,7 +208,11 @@ MainFuncDefNode* parseMainFuncDef(Node* parent) {
     nextToken(); // int
     nextToken(); // main
     nextToken(); // (
-    nextToken(); // )
+    if (peekToken(0)->type == RPARENT) {
+        nextToken(); // )
+    } else {
+        addError(peekToken(-1)->line, 'j');
+    }
     node->block = parseBlock((Node*)node);
     return node;
 }
@@ -208,7 +228,11 @@ FuncDefNode* parseFuncDef(Node* parent) {
     node->funcName = node->ident->value;
     nextToken(); // (
     node->funcFParams = parseFuncFParams((Node*)node);
-    nextToken(); // )
+    if (peekToken(0)->type == RPARENT) {
+        nextToken(); // )
+    } else {
+        addError(peekToken(-1)->line, 'j');
+    }
     node->block = parseBlock((Node*)node);
     return node;
 }
@@ -237,7 +261,11 @@ FuncFParamNode* parseFuncFParam(Node* parent) {
     if (peekToken(0)->type == LBRACK) {
         node->isArray = 1;
         nextToken(); // [
-        nextToken(); // ]
+        if (peekToken(0)->type == RBRACK) {
+            nextToken(); // ]
+        } else {
+            addError(peekToken(-1)->line, 'k');
+        }
     } else {
         node->isArray = 0;
     }
@@ -270,6 +298,12 @@ BlockItemNode* parseBlockItem(Node* parent) {
     return node;
 }
 
+int isExp() {
+    int type = peekToken(0)->type;
+    return type == LPARENT || type == MINU || type == PLUS || type == IDENFR ||
+           type == INTCON || type == CHRCON;
+}
+
 extern Token* curToken;
 
 StmtNode* parseStmt(Node* parent) {
@@ -282,7 +316,11 @@ StmtNode* parseStmt(Node* parent) {
         nextToken(); // if
         nextToken(); // (
         node->cond = parseCond((Node*)node);
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
         node->ifStmt = parseStmt((Node*)node);
         if (peekToken(0)->type == ELSETK) {
             nextToken(); // else
@@ -304,24 +342,40 @@ StmtNode* parseStmt(Node* parent) {
         if (peekToken(0)->type != RPARENT) {
             node->forStmt2 = parseForStmt((Node*)node);
         }
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
         node->forStmt = parseStmt((Node*)node);
         return node;
     case BREAKTK:
         node->stmtType = BREAK_STMT;
         nextToken(); // break
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         return node;
     case CONTINUETK:
         node->stmtType = CONTINUE_STMT;
         nextToken(); // continue
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         return node;
     case RETURNTK:
         node->stmtType = RETURN_STMT;
         nextToken(); // return
-        if (peekToken(0)->type != SEMICN) {
+        if (peekToken(0)->type != SEMICN && isExp()) {
             node->exp = parseExp((Node*)node);
+        }
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
         }
         nextToken(); // ;
         return node;
@@ -335,7 +389,15 @@ StmtNode* parseStmt(Node* parent) {
             nextToken(); //,
             pushVector(node->exps, parseExp((Node*)node));
         }
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         return node;
     case LBRACE:
@@ -353,6 +415,10 @@ StmtNode* parseStmt(Node* parent) {
     node->exp = parseExp((Node*)node);
     if (peekToken(0)->type != ASSIGN) {
         node->stmtType = EXP_STMT;
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         return node;
     }
@@ -367,19 +433,39 @@ StmtNode* parseStmt(Node* parent) {
         node->stmtType = GETINT_STMT;
         nextToken(); // getint
         nextToken(); // (
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         break;
     case GETCHARTK:
         node->stmtType = GETCHAR_STMT;
         nextToken(); // getchar
         nextToken(); // (
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         break;
     default:
         node->exp = ASSIGN_STMT;
         node->exp = parseExp((Node*)node);
+        if (peekToken(0)->type != SEMICN) {
+            addError(peekToken(-1)->line, 'i');
+            return node;
+        }
         nextToken(); // ;
         break;
     }
@@ -446,7 +532,11 @@ UnaryExpNode* parseUnaryExp(Node* parent) {
         node->name = node->ident->value;
         nextToken(); // (
         node->funcRParams = parseFuncRParams((Node*)node);
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
         return node;
     }
     if (peekToken(0)->type == PLUS || peekToken(0)->type == MINU ||
@@ -501,7 +591,11 @@ PrimaryExpNode* parsePrimaryExp(Node* parent) {
         node->primaryType = EXP_PRIMARY;
         nextToken(); // (
         node->exp = parseExp((Node*)node);
-        nextToken(); // )
+        if (peekToken(0)->type == RPARENT) {
+            nextToken(); // )
+        } else {
+            addError(peekToken(-1)->line, 'j');
+        }
         return node;
     }
     node->primaryType = LVAL_PRIMARY;
@@ -584,7 +678,11 @@ LValNode* parseLVal(Node* parent) {
     if (peekToken(0)->type == LBRACK) {
         nextToken(); // [
         node->exp = parseExp((Node*)node);
-        nextToken(); // ]
+        if (peekToken(0)->type == RBRACK) {
+            nextToken(); // ]
+        } else {
+            addError(peekToken(-1)->line, 'k');
+        }
     }
     return node;
 }
