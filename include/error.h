@@ -9,5 +9,6 @@ typedef struct ErrItem {
 void errInit();
 void addError(int line, char type);
 void printErr();
+void errDetect();
 
 #endif

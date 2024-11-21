@@ -35,3 +35,49 @@ void printErr() {
                 ((ErrItem*)errList->values[i])->type);
     }
 }
+
+extern CompUnitNode* nodesRoot;
+
+void errDetect(Node* node) {
+    if (node == NULL) {
+        return;
+    }
+    switch (node->nodeType) {
+        NODECASE(CompUnit)
+        NODECASE(Decl)
+        NODECASE(FuncDef)
+        NODECASE(MainFuncDef)
+        NODECASE(ConstDecl)
+        NODECASE(ConstDef)
+        NODECASE(ConstInitVal)
+        NODECASE(ConstExp)
+        NODECASE(VarDecl)
+        NODECASE(VarDef)
+        NODECASE(InitVal)
+        NODECASE(LVal)
+        NODECASE(Ident)
+        NODECASE(FuncFParams)
+        NODECASE(FuncFParam)
+        NODECASE(Block)
+        NODECASE(BlockItem)
+        NODECASE(Stmt)
+        NODECASE(Exp)
+        NODECASE(AddExp)
+        NODECASE(MulExp)
+        NODECASE(UnaryOp)
+        NODECASE(UnaryExp)
+        NODECASE(FuncRParams)
+        NODECASE(PrimaryExp)
+        NODECASE(Cond)
+        NODECASE(LOrExp)
+        NODECASE(LAndExp)
+        NODECASE(EqExp)
+        NODECASE(RelExp)
+        NODECASE(Number)
+        NODECASE(Character)
+        NODECASE(ForStmt)
+        NODECASE(StringConst)
+    default:
+        break;
+    }
+}

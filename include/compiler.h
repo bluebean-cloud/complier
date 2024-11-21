@@ -4,6 +4,7 @@
 #include "node.h"
 #include "token.h"
 #include "error.h"
+#include "pcode.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,10 +26,11 @@
         free(((POINTER*)node)->CONTENT);                                       \
         ((POINTER*)node)->CONTENT = NULL;                                      \
     }
-#define PRINTCASE(NODE_TYPE)                                                   \
-    return;                                                                    \
+#define NODECASE(NODE_TYPE)                                                   \
+    break;                                                                    \
     case NODE_TYPE:;                                                           \
         TYPE2NODE(NODE_TYPE)* node##NODE_TYPE = (TYPE2NODE(NODE_TYPE)*)node;
+
 // Lexer
 void lexAnalyse();
 void getInt(Token* t);
