@@ -104,7 +104,7 @@ typedef enum P_INS_TYPE {
 
 /*
     在函数调用时，分配活动记录：分配三个单位的栈空间分别给 RV, RA, DL
-    
+
     这样在函数结束返回时当前栈顶就是函数的返回值。（对于 VOID 函数，返回值为 0）
 
     随后依次分配函数参数
@@ -112,16 +112,42 @@ typedef enum P_INS_TYPE {
     在函数结束时，SP <- MP, MP <- DL，PC <- RA
 */
 
-typedef struct P_INS {
+typedef struct P_INS P_INS;
+
+// PCode-visitor
+typedef struct P_FUNC P_FUNC;
+typedef struct P_SCOPE P_SCOPE;
+typedef struct P_VAR P_VAR;
+
+struct P_INS {
     P_INS_TYPE insType;
     int v;
     char* s;
-} P_INS;
+};
 
+struct P_FUNC {
+    TypeBorFuncType funcType;
+    P_SCOPE* scope;
+    Vector* params;
+    Vector* vars;
+};
 
-void pCodeRun();
-int execPCode();
-void pCodeVisit();
-void pCodeTrans();
+struct P_SCOPE {
+    P_SCOPE* parent;
+    Vector* sons;
+    Vector* vars;
+    Vector* funcs;
+};
+
+struct P_VAR {
+    TypeBorFuncType varType;
+    int isArr;
+    char* name;
+    // 对函数体内部变量进行重命名
+    // 具体规则为 name%i >> name 为原名称，i 为此函数定义的第 i 个变量
+    // 这样做的目的是防止不同域下的变量重名。
+    // 并可以通过 %i 取出该变量在函数参数区中的位置
+    char* rename;
+};
 
 #endif

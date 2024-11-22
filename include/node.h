@@ -1,7 +1,7 @@
 #ifndef _NODE
 #define _NODE
 #include "token.h"
-#include "vector.h"
+#include "tool.h"
 
 /*
     语法分析头文件

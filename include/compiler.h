@@ -87,4 +87,12 @@ StringConstNode* parseStringConst(Node* parent);
 NumberNode* parseNumber(Node* parent);
 CharacterNode* parseCharacter(Node* parent);
 
+// PCode
+void pCodeRun();
+void pCodeInit();
+int execPCode();
+void pCodeVisit(Node* node);
+void pCodeTrans();
+P_SCOPE* newPScope(P_SCOPE* parent);
+
 #endif

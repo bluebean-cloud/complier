@@ -7,7 +7,7 @@ const char inputFile[] = "testfile.txt";
 const char outputFile[] = "parser.txt";
 const char errFile[] = "error.txt";
 extern int errOccur;
-int RUNNER = 1; // 1->PCode 2->LLVM 3->MIPS
+int RUNNER_TYPE = 1; // 1->PCode 2->LLVM 3->MIPS
 
 // just go go
 int main() {
