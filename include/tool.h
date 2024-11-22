@@ -27,7 +27,7 @@ struct Trie {
 };
 
 Trie* createTrie();
-void* getTrieData(Trie* trie, char* str, int cnt);
+void* getTrieData(Trie* root, char* str);
 void insertTrie(Trie* root, char* str, void* data);
 
 #endif

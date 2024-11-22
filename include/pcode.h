@@ -130,18 +130,28 @@ struct P_FUNC {
     P_SCOPE* scope;
     Vector* params;
     Vector* vars;
+    char* funcName;
+    // 为函数内局部变量编号计数
+    int varCnt;
 };
 
 struct P_SCOPE {
     P_SCOPE* parent;
+    // 全局域不存储，非全局域存储 P_SCOPE*
     Vector* sons;
-    Vector* vars;
+    // 全局域存储 P_FUNC*
     Vector* funcs;
+    // 全局域存储 P_VAR*
+    Vector* vars;
+    // 非全局域存储 name <-> var 映射
+    Trie* trieRoot;
 };
 
 struct P_VAR {
     TypeBorFuncType varType;
     int isArr;
+    int isCon;
+    // 进行语义分析时根据该 name 查询作用域
     char* name;
     // 对函数体内部变量进行重命名
     // 具体规则为 name%i >> name 为原名称，i 为此函数定义的第 i 个变量

@@ -93,8 +93,7 @@ ConstDefNode* parseConstDef(Node* parent) {
 }
 
 ConstInitValNode* parseConstInitVal(Node* parent) {
-    ConstInitValNode* node =
-        (ConstInitValNode*)malloc(sizeof(ConstInitValNode));
+    ConstInitValNode* node = (ConstInitValNode*)malloc(sizeof(ConstInitValNode));
     node->node = newNode(ConstInitVal, parent, NULL);
     node->constExp = NULL;
     node->constExps = NULL;
@@ -220,9 +219,7 @@ MainFuncDefNode* parseMainFuncDef(Node* parent) {
 FuncDefNode* parseFuncDef(Node* parent) {
     FuncDefNode* node = (FuncDefNode*)malloc(sizeof(FuncDefNode));
     node->node = newNode(FuncDef, parent, NULL);
-    node->typeFuncType = peekToken(0)->type == CHARTK ? CHAR :
-                         peekToken(0)->type == INTTK  ? INT :
-                                                        VOID;
+    node->typeFuncType = peekToken(0)->type == CHARTK ? CHAR : peekToken(0)->type == INTTK ? INT : VOID;
     nextToken(); // int | char | void
     node->ident = parseIdent((Node*)node);
     node->funcName = node->ident->value;
@@ -289,8 +286,7 @@ BlockItemNode* parseBlockItem(Node* parent) {
     node->node = newNode(BlockItem, parent, NULL);
     node->decl = NULL;
     node->stmt = NULL;
-    if (peekToken(0)->type == INTTK || peekToken(0)->type == CHARTK ||
-        peekToken(0)->type == CONSTTK) {
+    if (peekToken(0)->type == INTTK || peekToken(0)->type == CHARTK || peekToken(0)->type == CONSTTK) {
         node->decl = parseDecl((Node*)node);
     } else {
         node->stmt = parseStmt((Node*)node);
@@ -300,8 +296,7 @@ BlockItemNode* parseBlockItem(Node* parent) {
 
 int isExp() {
     int type = peekToken(0)->type;
-    return type == LPARENT || type == MINU || type == PLUS || type == IDENFR ||
-           type == INTCON || type == CHRCON;
+    return type == LPARENT || type == MINU || type == PLUS || type == IDENFR || type == INTCON || type == CHRCON;
 }
 
 extern Token* curToken;
@@ -514,8 +509,7 @@ MulExpNode* parseMulExp(Node* parent) {
     node->unaryExps = createVector();
     node->operators = createVector();
     pushVector(node->unaryExps, parseUnaryExp((Node*)node));
-    while (peekToken(0)->type == MULT || peekToken(0)->type == DIV ||
-           peekToken(0)->type == MOD) {
+    while (peekToken(0)->type == MULT || peekToken(0)->type == DIV || peekToken(0)->type == MOD) {
         pushVector(node->operators, nextToken());
         pushVector(node->unaryExps, parseUnaryExp((Node*)node));
     }
@@ -539,8 +533,7 @@ UnaryExpNode* parseUnaryExp(Node* parent) {
         }
         return node;
     }
-    if (peekToken(0)->type == PLUS || peekToken(0)->type == MINU ||
-        peekToken(0)->type == NOT) {
+    if (peekToken(0)->type == PLUS || peekToken(0)->type == MINU || peekToken(0)->type == NOT) {
         node->unaryExpType = UNARY;
         node->unaryOp = parseUnaryOp((Node*)node);
         node->unaryExp = parseUnaryExp((Node*)node);
@@ -866,220 +859,235 @@ void printNodeTree(Node* node) {
         return;
     }
     switch (node->nodeType) {
-        NODECASE(CompUnit)
-        for (int i = 0; i < nodeCompUnit->decls->length; i++) {
-            printNodeTree((Node*)nodeCompUnit->decls->values[i]);
-        }
-        for (int i = 0; i < nodeCompUnit->funcDefs->length; i++) {
-            printNodeTree((Node*)nodeCompUnit->funcDefs->values[i]);
-        }
-        printNodeTree((Node*)nodeCompUnit->mainFuncDef);
-        fprintf(output, "<CompUnit>\n");
-        NODECASE(Decl)
-        if (nodeDecl->constDecl) {
-            printNodeTree((Node*)nodeDecl->constDecl);
-        }
-        if (nodeDecl->varDecl) {
-            printNodeTree((Node*)nodeDecl->varDecl);
-        }
-        NODECASE(FuncDef)
-        fprintf(output, "%s\n<FuncType>\nIDENFR %s\nLPARENT (\n",
-                typeToPrint[nodeFuncDef->typeFuncType], nodeFuncDef->funcName);
-        printNodeTree((Node*)nodeFuncDef->funcFParams);
-        fprintf(output, "RPARENT )\n");
-        printNodeTree((Node*)nodeFuncDef->block);
-        fprintf(output, "<FuncDef>\n");
-        NODECASE(MainFuncDef)
-        fprintf(output, "INTTK int\nMAINTK main\nLPARENT (\nRPARENT )\n");
-        printNodeTree((Node*)nodeMainFuncDef->block);
-        fprintf(output, "<MainFuncDef>\n");
-        NODECASE(ConstDecl)
-        fprintf(output, "CONSTTK const\n%s\n",
-                typeToPrint[nodeConstDecl->typeBType]);
-        for (int i = 0; i < nodeConstDecl->constDefs->length; i++) {
-            if (i) {
-                fprintf(output, "COMMA ,\n");
+        NODECASE(CompUnit) {
+            for (int i = 0; i < nodeCompUnit->decls->length; i++) {
+                printNodeTree((Node*)nodeCompUnit->decls->values[i]);
             }
-            printNodeTree((Node*)nodeConstDecl->constDefs->values[i]);
+            for (int i = 0; i < nodeCompUnit->funcDefs->length; i++) {
+                printNodeTree((Node*)nodeCompUnit->funcDefs->values[i]);
+            }
+            printNodeTree((Node*)nodeCompUnit->mainFuncDef);
+            fprintf(output, "<CompUnit>\n");
         }
-        fprintf(output, "SEMICN ;\n<ConstDecl>\n");
-        NODECASE(ConstDef)
-        fprintf(output, "IDENFR %s\n", nodeConstDef->name);
-        if (nodeConstDef->constExp) {
-            fprintf(output, "LBRACK [\n");
-            printNodeTree((Node*)nodeConstDef->constExp);
-            fprintf(output, "RBRACK ]\n");
+        NODECASE(Decl) {
+            if (nodeDecl->constDecl) {
+                printNodeTree((Node*)nodeDecl->constDecl);
+            }
+            if (nodeDecl->varDecl) {
+                printNodeTree((Node*)nodeDecl->varDecl);
+            }
         }
-        fprintf(output, "ASSIGN =\n");
-        printNodeTree((Node*)nodeConstDef->constInitVal);
-        fprintf(output, "<ConstDef>\n");
-        NODECASE(ConstInitVal)
-        if (nodeConstInitVal->constExp) {
-            printNodeTree((Node*)nodeConstInitVal->constExp);
-        } else if (nodeConstInitVal->stringConst) {
-            fprintf(output, "STRCON %s\n", nodeConstInitVal->stringConst->str);
-        } else {
-            fprintf(output, "LBRACE {\n");
-            for (int i = 0; i < nodeConstInitVal->constExps->length; i++) {
+        NODECASE(FuncDef) {
+            fprintf(output, "%s\n<FuncType>\nIDENFR %s\nLPARENT (\n", typeToPrint[nodeFuncDef->typeFuncType],
+                    nodeFuncDef->funcName);
+            printNodeTree((Node*)nodeFuncDef->funcFParams);
+            fprintf(output, "RPARENT )\n");
+            printNodeTree((Node*)nodeFuncDef->block);
+            fprintf(output, "<FuncDef>\n");
+        }
+        NODECASE(MainFuncDef) {
+            fprintf(output, "INTTK int\nMAINTK main\nLPARENT (\nRPARENT )\n");
+            printNodeTree((Node*)nodeMainFuncDef->block);
+            fprintf(output, "<MainFuncDef>\n");
+        }
+        NODECASE(ConstDecl) {
+            fprintf(output, "CONSTTK const\n%s\n", typeToPrint[nodeConstDecl->typeBType]);
+            for (int i = 0; i < nodeConstDecl->constDefs->length; i++) {
                 if (i) {
                     fprintf(output, "COMMA ,\n");
                 }
-                printNodeTree((Node*)nodeConstInitVal->constExps->values[i]);
+                printNodeTree((Node*)nodeConstDecl->constDefs->values[i]);
             }
-            fprintf(output, "RBRACE }\n");
+            fprintf(output, "SEMICN ;\n<ConstDecl>\n");
         }
-        fprintf(output, "<ConstInitVal>\n");
-        NODECASE(ConstExp)
-        printNodeTree((Node*)nodeConstExp->addExp);
-        fprintf(output, "<ConstExp>\n");
-        NODECASE(VarDecl)
-        fprintf(output, "%s\n", typeToPrint[nodeVarDecl->typeBType]);
-        for (int i = 0; i < nodeVarDecl->varDefs->length; i++) {
-            if (i) {
-                fprintf(output, "COMMA ,\n");
+        NODECASE(ConstDef) {
+            fprintf(output, "IDENFR %s\n", nodeConstDef->name);
+            if (nodeConstDef->constExp) {
+                fprintf(output, "LBRACK [\n");
+                printNodeTree((Node*)nodeConstDef->constExp);
+                fprintf(output, "RBRACK ]\n");
             }
-            printNodeTree((Node*)nodeVarDecl->varDefs->values[i]);
-        }
-        fprintf(output, "SEMICN ;\n<VarDecl>\n");
-        NODECASE(VarDef) fprintf(output, "IDENFR %s\n", nodeVarDef->name);
-        if (nodeVarDef->constExp) {
-            fprintf(output, "LBRACK [\n");
-            printNodeTree((Node*)nodeVarDef->constExp);
-            fprintf(output, "RBRACK ]\n");
-        }
-        if (nodeVarDef->initVal) {
             fprintf(output, "ASSIGN =\n");
-            printNodeTree((Node*)nodeVarDef->initVal);
+            printNodeTree((Node*)nodeConstDef->constInitVal);
+            fprintf(output, "<ConstDef>\n");
         }
-        fprintf(output, "<VarDef>\n");
-        NODECASE(InitVal)
-        if (nodeInitVal->stringConst) {
-            printNodeTree((Node*)nodeInitVal->stringConst);
-        } else if (nodeInitVal->exp) {
-            printNodeTree((Node*)nodeInitVal->exp);
-        } else {
-            fprintf(output, "LBRACE {\n");
-            for (int i = 0; i < nodeInitVal->exps->length; i++) {
+        NODECASE(ConstInitVal) {
+            if (nodeConstInitVal->constExp) {
+                printNodeTree((Node*)nodeConstInitVal->constExp);
+            } else if (nodeConstInitVal->stringConst) {
+                fprintf(output, "STRCON %s\n", nodeConstInitVal->stringConst->str);
+            } else {
+                fprintf(output, "LBRACE {\n");
+                for (int i = 0; i < nodeConstInitVal->constExps->length; i++) {
+                    if (i) {
+                        fprintf(output, "COMMA ,\n");
+                    }
+                    printNodeTree((Node*)nodeConstInitVal->constExps->values[i]);
+                }
+                fprintf(output, "RBRACE }\n");
+            }
+            fprintf(output, "<ConstInitVal>\n");
+            NODECASE(ConstExp)
+            printNodeTree((Node*)nodeConstExp->addExp);
+            fprintf(output, "<ConstExp>\n");
+        }
+        NODECASE(VarDecl) {
+            fprintf(output, "%s\n", typeToPrint[nodeVarDecl->typeBType]);
+            for (int i = 0; i < nodeVarDecl->varDefs->length; i++) {
                 if (i) {
                     fprintf(output, "COMMA ,\n");
                 }
-                printNodeTree((Node*)nodeInitVal->exps->values[i]);
+                printNodeTree((Node*)nodeVarDecl->varDefs->values[i]);
+            }
+            fprintf(output, "SEMICN ;\n<VarDecl>\n");
+        }
+        NODECASE(VarDef) {
+            fprintf(output, "IDENFR %s\n", nodeVarDef->name);
+            if (nodeVarDef->constExp) {
+                fprintf(output, "LBRACK [\n");
+                printNodeTree((Node*)nodeVarDef->constExp);
+                fprintf(output, "RBRACK ]\n");
+            }
+            if (nodeVarDef->initVal) {
+                fprintf(output, "ASSIGN =\n");
+                printNodeTree((Node*)nodeVarDef->initVal);
+            }
+            fprintf(output, "<VarDef>\n");
+        }
+        NODECASE(InitVal) {
+            if (nodeInitVal->stringConst) {
+                printNodeTree((Node*)nodeInitVal->stringConst);
+            } else if (nodeInitVal->exp) {
+                printNodeTree((Node*)nodeInitVal->exp);
+            } else {
+                fprintf(output, "LBRACE {\n");
+                for (int i = 0; i < nodeInitVal->exps->length; i++) {
+                    if (i) {
+                        fprintf(output, "COMMA ,\n");
+                    }
+                    printNodeTree((Node*)nodeInitVal->exps->values[i]);
+                }
+                fprintf(output, "RBRACE }\n");
+            }
+            fprintf(output, "<InitVal>\n");
+        }
+        NODECASE(LVal) {
+            fprintf(output, "IDENFR %s\n", nodeLVal->name);
+            if (nodeLVal->exp) {
+                fprintf(output, "LBRACK [\n");
+                printNodeTree((Node*)nodeLVal->exp);
+                fprintf(output, "RBRACK ]\n");
+            }
+            fprintf(output, "<LVal>\n");
+        }
+        NODECASE(FuncFParams) {
+            if (nodeFuncFParams->funcFParams->length == 0) {
+                return;
+            }
+            for (int i = 0; i < nodeFuncFParams->funcFParams->length; i++) {
+                if (i) {
+                    fprintf(output, "COMMA ,\n");
+                }
+                printNodeTree((Node*)nodeFuncFParams->funcFParams->values[i]);
+            }
+            fprintf(output, "<FuncFParams>\n");
+        }
+        NODECASE(Block) {
+            fprintf(output, "LBRACE {\n");
+            for (int i = 0; i < nodeBlock->blockItems->length; i++) {
+                printNodeTree((Node*)nodeBlock->blockItems->values[i]);
             }
             fprintf(output, "RBRACE }\n");
+            fprintf(output, "<Block>\n");
         }
-        fprintf(output, "<InitVal>\n");
-        NODECASE(LVal)
-        fprintf(output, "IDENFR %s\n", nodeLVal->name);
-        if (nodeLVal->exp) {
-            fprintf(output, "LBRACK [\n");
-            printNodeTree((Node*)nodeLVal->exp);
-            fprintf(output, "RBRACK ]\n");
-        }
-        fprintf(output, "<LVal>\n");
-        NODECASE(FuncFParams)
-        if (nodeFuncFParams->funcFParams->length == 0) {
-            return;
-        }
-        for (int i = 0; i < nodeFuncFParams->funcFParams->length; i++) {
-            if (i) {
-                fprintf(output, "COMMA ,\n");
+        NODECASE(BlockItem) {
+            if (nodeBlockItem->decl) {
+                printNodeTree((Node*)nodeBlockItem->decl);
             }
-            printNodeTree((Node*)nodeFuncFParams->funcFParams->values[i]);
-        }
-        fprintf(output, "<FuncFParams>\n");
-        NODECASE(Block)
-        fprintf(output, "LBRACE {\n");
-        for (int i = 0; i < nodeBlock->blockItems->length; i++) {
-            printNodeTree((Node*)nodeBlock->blockItems->values[i]);
-        }
-        fprintf(output, "RBRACE }\n");
-        fprintf(output, "<Block>\n");
-        NODECASE(BlockItem) if (nodeBlockItem->decl) {
-            printNodeTree((Node*)nodeBlockItem->decl);
-        }
-        if (nodeBlockItem->stmt) {
-            printNodeTree((Node*)nodeBlockItem->stmt);
-        }
-        NODECASE(Stmt) switch (nodeStmt->stmtType) {
-        case ASSIGN_STMT:
-            printNodeTree((Node*)nodeStmt->lVal);
-            fprintf(output, "ASSIGN =\n");
-            printNodeTree((Node*)nodeStmt->exp);
-            fprintf(output, "SEMICN ;\n");
-            break;
-        case EXP_STMT:
-            printNodeTree((Node*)nodeStmt->exp);
-            fprintf(output, "SEMICN ;\n");
-            break;
-        case EMPTY_STMT:
-            fprintf(output, "SEMICN ;\n");
-            break;
-        case BLOCK_STMT:
-            printNodeTree((Node*)nodeStmt->block);
-            break;
-        case IF_STMT:
-            fprintf(output, "IFTK if\nLPARENT (\n");
-            printNodeTree((Node*)nodeStmt->cond);
-            fprintf(output, "RPARENT )\n");
-            printNodeTree((Node*)nodeStmt->ifStmt);
-            if (nodeStmt->elStmt) {
-                fprintf(output, "ELSETK else\n");
-                printNodeTree((Node*)nodeStmt->elStmt);
+            if (nodeBlockItem->stmt) {
+                printNodeTree((Node*)nodeBlockItem->stmt);
             }
-            break;
-        case FOR_STMT:
-            fprintf(output, "FORTK for\nLPARENT (\n");
-            if (nodeStmt->forStmt1) {
-                printNodeTree((Node*)nodeStmt->forStmt1);
-            }
-            fprintf(output, "SEMICN ;\n");
-            if (nodeStmt->cond) {
-                printNodeTree((Node*)nodeStmt->cond);
-            }
-            fprintf(output, "SEMICN ;\n");
-            if (nodeStmt->forStmt2) {
-                printNodeTree((Node*)nodeStmt->forStmt2);
-            }
-            fprintf(output, "RPARENT )\n");
-            printNodeTree((Node*)nodeStmt->forStmt);
-            break;
-        case BREAK_STMT:
-            fprintf(output, "BREAKTK break\nSEMICN ;\n");
-            break;
-        case CONTINUE_STMT:
-            fprintf(output, "CONTINUETK continue\nSEMICN ;\n");
-            break;
-        case RETURN_STMT:
-            fprintf(output, "RETURNTK return\n");
-            if (nodeStmt->exp) {
+        }
+        NODECASE(Stmt) {
+            switch (nodeStmt->stmtType) {
+            case ASSIGN_STMT:
+                printNodeTree((Node*)nodeStmt->lVal);
+                fprintf(output, "ASSIGN =\n");
                 printNodeTree((Node*)nodeStmt->exp);
+                fprintf(output, "SEMICN ;\n");
+                break;
+            case EXP_STMT:
+                printNodeTree((Node*)nodeStmt->exp);
+                fprintf(output, "SEMICN ;\n");
+                break;
+            case EMPTY_STMT:
+                fprintf(output, "SEMICN ;\n");
+                break;
+            case BLOCK_STMT:
+                printNodeTree((Node*)nodeStmt->block);
+                break;
+            case IF_STMT:
+                fprintf(output, "IFTK if\nLPARENT (\n");
+                printNodeTree((Node*)nodeStmt->cond);
+                fprintf(output, "RPARENT )\n");
+                printNodeTree((Node*)nodeStmt->ifStmt);
+                if (nodeStmt->elStmt) {
+                    fprintf(output, "ELSETK else\n");
+                    printNodeTree((Node*)nodeStmt->elStmt);
+                }
+                break;
+            case FOR_STMT:
+                fprintf(output, "FORTK for\nLPARENT (\n");
+                if (nodeStmt->forStmt1) {
+                    printNodeTree((Node*)nodeStmt->forStmt1);
+                }
+                fprintf(output, "SEMICN ;\n");
+                if (nodeStmt->cond) {
+                    printNodeTree((Node*)nodeStmt->cond);
+                }
+                fprintf(output, "SEMICN ;\n");
+                if (nodeStmt->forStmt2) {
+                    printNodeTree((Node*)nodeStmt->forStmt2);
+                }
+                fprintf(output, "RPARENT )\n");
+                printNodeTree((Node*)nodeStmt->forStmt);
+                break;
+            case BREAK_STMT:
+                fprintf(output, "BREAKTK break\nSEMICN ;\n");
+                break;
+            case CONTINUE_STMT:
+                fprintf(output, "CONTINUETK continue\nSEMICN ;\n");
+                break;
+            case RETURN_STMT:
+                fprintf(output, "RETURNTK return\n");
+                if (nodeStmt->exp) {
+                    printNodeTree((Node*)nodeStmt->exp);
+                }
+                fprintf(output, "SEMICN ;\n");
+                break;
+            case GETINT_STMT:
+                printNodeTree((Node*)nodeStmt->lVal);
+                fprintf(output, "ASSIGN =\nGETINTTK getint\nLPARENT (\nRPARENT "
+                                ")\nSEMICN ;\n");
+                break;
+            case GETCHAR_STMT:
+                printNodeTree((Node*)nodeStmt->lVal);
+                fprintf(output, "ASSIGN =\nGETCHARTK getchar\nLPARENT (\nRPARENT "
+                                ")\nSEMICN ;\n");
+                break;
+            case PRINTF_STMT:
+                fprintf(output, "PRINTFTK printf\nLPARENT (\nSTRCON %s\n", nodeStmt->stringConst->str);
+                for (int i = 0; i < nodeStmt->exps->length; i++) {
+                    fprintf(output, "COMMA ,\n");
+                    printNodeTree((Node*)nodeStmt->exps->values[i]);
+                }
+                fprintf(output, "RPARENT )\nSEMICN ;\n");
+                break;
+            default:
+                break;
             }
-            fprintf(output, "SEMICN ;\n");
-            break;
-        case GETINT_STMT:
-            printNodeTree((Node*)nodeStmt->lVal);
-            fprintf(
-                output,
-                "ASSIGN =\nGETINTTK getint\nLPARENT (\nRPARENT )\nSEMICN ;\n");
-            break;
-        case GETCHAR_STMT:
-            printNodeTree((Node*)nodeStmt->lVal);
-            fprintf(output, "ASSIGN =\nGETCHARTK getchar\nLPARENT (\nRPARENT "
-                            ")\nSEMICN ;\n");
-            break;
-        case PRINTF_STMT:
-            fprintf(output, "PRINTFTK printf\nLPARENT (\nSTRCON %s\n",
-                    nodeStmt->stringConst->str);
-            for (int i = 0; i < nodeStmt->exps->length; i++) {
-                fprintf(output, "COMMA ,\n");
-                printNodeTree((Node*)nodeStmt->exps->values[i]);
-            }
-            fprintf(output, "RPARENT )\nSEMICN ;\n");
-            break;
-        default:
-            break;
+            fprintf(output, "<Stmt>\n");
         }
-        fprintf(output, "<Stmt>\n");
         NODECASE(Exp)
         printNodeTree((Node*)nodeExp->addExp);
         fprintf(output, "<Exp>\n");
@@ -1127,8 +1135,7 @@ void printNodeTree(Node* node) {
         }
         fprintf(output, "<FuncRParams>\n");
         NODECASE(FuncFParam)
-        fprintf(output, "%s\nIDENFR %s\n",
-                typeToPrint[nodeFuncFParam->typeBType], nodeFuncFParam->name);
+        fprintf(output, "%s\nIDENFR %s\n", typeToPrint[nodeFuncFParam->typeBType], nodeFuncFParam->name);
         if (nodeFuncFParam->isArray) {
             fprintf(output, "LBRACK [\nRBRACK ]\n");
         }
@@ -1143,17 +1150,16 @@ void printNodeTree(Node* node) {
             printNodeTree((Node*)nodePrimaryExp->lVal);
         }
         if (nodePrimaryExp->number) {
-            fprintf(output, "INTCON %d\n<Number>\n",
-                    nodePrimaryExp->number->value);
+            fprintf(output, "INTCON %d\n<Number>\n", nodePrimaryExp->number->value);
         }
         if (nodePrimaryExp->character) {
-            fprintf(output, "CHRCON %s\n<Character>\n",
-                    nodePrimaryExp->character->str);
+            fprintf(output, "CHRCON %s\n<Character>\n", nodePrimaryExp->character->str);
         }
         fprintf(output, "<PrimaryExp>\n");
-        NODECASE(Cond)
-        printNodeTree((Node*)nodeCond->lOrExp);
-        fprintf(output, "<Cond>\n");
+        NODECASE(Cond) {
+            printNodeTree((Node*)nodeCond->lOrExp);
+            fprintf(output, "<Cond>\n");
+        }
         NODECASE(LOrExp)
         printNodeTree((Node*)nodeLOrExp->lAndExps->values[0]);
         fprintf(output, "<LOrExp>\n");
@@ -1194,9 +1200,7 @@ void printNodeTree(Node* node) {
         printNodeTree((Node*)nodeForStmt->exp);
         fprintf(output, "<ForStmt>\n");
         NODECASE(UnaryOp)
-        fprintf(output, "%s %s\n<UnaryOp>\n",
-                tokenString[nodeUnaryOp->unaryOpType],
-                nodeUnaryOp->node.token->content);
+        fprintf(output, "%s %s\n<UnaryOp>\n", tokenString[nodeUnaryOp->unaryOpType], nodeUnaryOp->node.token->content);
         NODECASE(StringConst)
         fprintf(output, "STRCON %s\n", nodeStringConst->str);
     default:
