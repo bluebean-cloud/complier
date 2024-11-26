@@ -206,6 +206,8 @@ struct LValNode {
     IdentNode* ident;
     ExpNode* exp;
     char* name;
+    char* rename;
+    int id;
 };
 
 struct IdentNode {

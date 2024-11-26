@@ -145,6 +145,9 @@ struct P_SCOPE {
     Vector* vars;
     // 非全局域存储 name <-> var 映射
     Trie* trieRoot;
+    // 是否包含于循环当中，非 0 代表处于循环中
+    int isCycle;
+    Vector* blockItems;
 };
 
 struct P_VAR {
@@ -158,6 +161,7 @@ struct P_VAR {
     // 这样做的目的是防止不同域下的变量重名。
     // 并可以通过 %i 取出该变量在函数参数区中的位置
     char* rename;
+    int id;
 };
 
 #endif

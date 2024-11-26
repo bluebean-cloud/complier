@@ -95,5 +95,6 @@ void pCodeVisit(Node* node);
 void pCodeTrans();
 P_SCOPE* newPScope(P_SCOPE* parent);
 P_VAR* findPVar(char* name);
+int checkFuncName(char* name);
 
 #endif
