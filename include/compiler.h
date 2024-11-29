@@ -1,10 +1,10 @@
 #ifndef _COMPILER
 #define _COMPILER
 
-#include "node.h"
-#include "token.h"
 #include "error.h"
+#include "node.h"
 #include "pcode.h"
+#include "token.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,22 +14,27 @@
     compiler 头文件，包含所有函数声明
 */
 #define TYPE2NODE(TYPE) TYPE##Node
-#define FREE(POINTER, CONTENT)                                                 \
-    if (((POINTER*)node)->CONTENT) {                                           \
-        freeNode((Node*)(((POINTER*)node)->CONTENT));                          \
-        free(((POINTER*)node)->CONTENT);                                       \
-        ((POINTER*)node)->CONTENT = NULL;                                      \
+#define FREE(POINTER, CONTENT)                                                                                         \
+    if (((POINTER*)node)->CONTENT) {                                                                                   \
+        freeNode((Node*)(((POINTER*)node)->CONTENT));                                                                  \
+        free(((POINTER*)node)->CONTENT);                                                                               \
+        ((POINTER*)node)->CONTENT = NULL;                                                                              \
     }
-#define FREE_V(POINTER, CONTENT, FLAG)                                         \
-    if (((POINTER*)node)->CONTENT) {                                           \
-        freeVector(((POINTER*)node)->CONTENT, FLAG);                           \
-        free(((POINTER*)node)->CONTENT);                                       \
-        ((POINTER*)node)->CONTENT = NULL;                                      \
+#define FREE_V(POINTER, CONTENT, FLAG)                                                                                 \
+    if (((POINTER*)node)->CONTENT) {                                                                                   \
+        freeVector(((POINTER*)node)->CONTENT, FLAG);                                                                   \
+        free(((POINTER*)node)->CONTENT);                                                                               \
+        ((POINTER*)node)->CONTENT = NULL;                                                                              \
     }
-#define NODECASE(NODE_TYPE)                                                   \
-    break;                                                                    \
-    case NODE_TYPE:;                                                           \
+#define NODECASE(NODE_TYPE)                                                                                            \
+    break;                                                                                                             \
+    case NODE_TYPE:;                                                                                                   \
         TYPE2NODE(NODE_TYPE)* node##NODE_TYPE = (TYPE2NODE(NODE_TYPE)*)node;
+
+
+typedef enum COMPILER_TYPE {
+    LEXER, PARSER, PCODE, LLVM, MIPS
+};
 
 // Lexer
 void lexAnalyse();
@@ -96,5 +101,8 @@ void pCodeTrans();
 P_SCOPE* newPScope(P_SCOPE* parent);
 P_VAR* findPVar(char* name);
 int checkFuncName(char* name);
+int checkFuncFParam(char* name);
+P_FUNC* getFunc(char* name);
+int getFormatNumber(char* str);
 
 #endif

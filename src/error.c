@@ -37,7 +37,7 @@ void printErr() {
 }
 
 extern CompUnitNode* nodesRoot;
-
+/*
 void errDetect(Node* node) {
     if (node == NULL) {
         return;
@@ -81,3 +81,4 @@ void errDetect(Node* node) {
         break;
     }
 }
+*/

@@ -245,6 +245,7 @@ struct StmtNode {
     StmtNode* forStmt;
     StringConstNode* stringConst;
     Vector* exps;
+    int line;
 };
 
 struct ExpNode {

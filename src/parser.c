@@ -305,6 +305,7 @@ StmtNode* parseStmt(Node* parent) {
     StmtNode* node = (StmtNode*)malloc(sizeof(StmtNode));
     memset(node, 0, sizeof(StmtNode));
     node->node = newNode(Stmt, parent, NULL);
+    node->line = peekToken(0)->line;
     switch (peekToken(0)->type) {
     case IFTK:
         node->stmtType = IF_STMT;
@@ -455,7 +456,7 @@ StmtNode* parseStmt(Node* parent) {
         nextToken(); // ;
         break;
     default:
-        node->exp = ASSIGN_STMT;
+        node->stmtType = ASSIGN_STMT;
         node->exp = parseExp((Node*)node);
         if (peekToken(0)->type != SEMICN) {
             addError(peekToken(-1)->line, 'i');

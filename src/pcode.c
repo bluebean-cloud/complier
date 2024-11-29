@@ -20,11 +20,11 @@ extern int errOccur;
 extern int RUNNER_TYPE;
 
 void pCodeRun() {
-    pCodeVisit(nodesRoot);
+    pCodeInit();
+    pCodeVisit((Node*)nodesRoot);
     if (errOccur || RUNNER_TYPE != 1) {
         return;
     }
-    pCodeInit();
     pCodeTrans();
     while (execPCode())
         ;
@@ -83,7 +83,7 @@ void pCodeVisit(Node* node) {
                 pCodeVisit((Node*)nodeCompUnit->decls->values[i]);
             }
             for (int i = 0; i < nodeCompUnit->funcDefs->length; i++) {
-                pCodeVisit((Node*)nodeCompUnit->decls->values[i]);
+                pCodeVisit((Node*)nodeCompUnit->funcDefs->values[i]);
             }
             pCodeVisit((Node*)nodeCompUnit->mainFuncDef);
         }
@@ -103,10 +103,10 @@ void pCodeVisit(Node* node) {
             curScope = curScope->parent;
         }
         NODECASE(MainFuncDef) {
-            mainFunc = newPFunc(INT, "main");
+            curFunc = mainFunc = newPFunc(INT, "main");
             curScope = mainFunc->scope;
             pushVector(pGlobalScope->funcs, mainFunc);
-            pCodeVisit((Node*)nodeMainFuncDef);
+            pCodeVisit((Node*)nodeMainFuncDef->block);
             curScope = curScope->parent;
         }
         NODECASE(ConstDecl) {
@@ -208,16 +208,14 @@ void pCodeVisit(Node* node) {
         }
         NODECASE(LVal) {
             P_VAR* tVar = findPVar(nodeLVal->name);
-            if (tVar != NULL) {
+            if (tVar == NULL) {
                 addError(nodeLVal->ident->node.token->line, 'c');
                 break;
             }
             nodeLVal->rename = tVar->rename;
             nodeLVal->id = tVar->id;
         }
-        NODECASE(Ident) {
-            // 理论上这里不需要做任何事情，缺少上下文，单纯的名字没有任何语义
-        }
+        // NODECASE(Ident)
         NODECASE(FuncFParams) {
             for (int i = 0; i < nodeFuncFParams->funcFParams->length; i++) {
                 pCodeVisit((Node*)nodeFuncFParams->funcFParams->values[i]);
@@ -229,6 +227,10 @@ void pCodeVisit(Node* node) {
             curVar->isArr = nodeFuncFParam->isArray;
             curVar->isCon = 0;
             curVar->name = nodeFuncFParam->name;
+            if (checkFuncFParam(curVar->name) == 0) {
+                addError(nodeFuncFParam->node.token->line, 'b');
+                break;
+            }
             curVar->rename = (char*)malloc(sizeof(char) * (strlen(curVar->name) + 6));
             sprintf(curVar->rename, "%s%%%d", curVar->name, curFunc->varCnt);
             curVar->id = curFunc->varCnt;
@@ -250,8 +252,15 @@ void pCodeVisit(Node* node) {
         }
         NODECASE(Stmt) {
             switch (nodeStmt->stmtType) {
+            case EXP_STMT:
+                pCodeVisit((Node*)nodeStmt->exp);
+                break;
             case ASSIGN_STMT:
                 pCodeVisit((Node*)nodeStmt->lVal);
+                if (findPVar(nodeStmt->lVal->name)->isCon) {
+                    addError(nodeStmt->line, 'h');
+                    break;
+                }
                 pCodeVisit((Node*)nodeStmt->exp);
                 break;
             case EMPTY_STMT:
@@ -268,24 +277,43 @@ void pCodeVisit(Node* node) {
                 pCodeVisit((Node*)nodeStmt->forStmt1);
                 pCodeVisit((Node*)nodeStmt->cond);
                 pCodeVisit((Node*)nodeStmt->forStmt2);
+                cycleCnt++;
                 pCodeVisit((Node*)nodeStmt->forStmt);
+                cycleCnt--;
                 break;
             case BREAK_STMT:
-                break;
             case CONTINUE_STMT:
+                if (cycleCnt == 0) {
+                    addError(nodeStmt->line, 'm');
+                }
                 break;
             case RETURN_STMT:
+                if (curFunc->funcType == VOID && nodeStmt->exp != NULL) {
+                    addError(nodeStmt->line, 'f');
+                }
                 pCodeVisit((Node*)nodeStmt->exp);
                 break;
             case GETINT_STMT:
                 pCodeVisit((Node*)nodeStmt->lVal);
+                if (findPVar(nodeStmt->lVal->name)->isCon) {
+                    addError(nodeStmt->line, 'h');
+                    break;
+                }
                 break;
             case GETCHAR_STMT:
                 pCodeVisit((Node*)nodeStmt->lVal);
+                if (findPVar(nodeStmt->lVal->name)->isCon) {
+                    addError(nodeStmt->line, 'h');
+                    break;
+                }
                 break;
             case PRINTF_STMT:
                 for (int i = 0; i < nodeStmt->exps->length; i++) {
                     pCodeVisit((Node*)nodeStmt->exps->values[i]);
+                }
+                if (getFormatNumber(nodeStmt->stringConst->str) != nodeStmt->exps->length) {
+                    addError(nodeStmt->line, 'l');
+                    break;
                 }
                 break;
             }
@@ -303,15 +331,23 @@ void pCodeVisit(Node* node) {
                 pCodeVisit((Node*)nodeMulExp->unaryExps->values[i]);
             }
         }
-        NODECASE(UnaryOp) {
-            // nothing to do
-        }
+        // NODECASE(UnaryOp)
         NODECASE(UnaryExp) {
+            P_FUNC* tmpFunc;
             switch (nodeUnaryExp->unaryExpType) {
             case PRIMARY:
                 pCodeVisit((Node*)nodeUnaryExp->primaryExp);
                 break;
             case CALL:
+                if ((tmpFunc = getFunc(nodeUnaryExp->name)) == NULL) {
+                    addError(nodeUnaryExp->ident->node.token->line, 'c');
+                    break;
+                }
+                if (tmpFunc->params->length != nodeUnaryExp->funcRParams->exps->length) {
+                    addError(nodeUnaryExp->ident->node.token->line, 'd');
+                    break;
+                }
+
                 pCodeVisit((Node*)nodeUnaryExp->funcRParams);
                 break;
             case UNARY:
@@ -320,7 +356,7 @@ void pCodeVisit(Node* node) {
             }
         }
         NODECASE(FuncRParams) {
-            for (int i = 0; i < nodeFuncRParams->exps; i++) {
+            for (int i = 0; i < nodeFuncRParams->exps->length; i++) {
                 pCodeVisit((Node*)nodeFuncRParams->exps->values[i]);
             }
         }
@@ -342,7 +378,7 @@ void pCodeVisit(Node* node) {
             pCodeVisit((Node*)nodeCond->lOrExp);
         }
         NODECASE(LOrExp) {
-            for (int i = 0; i < nodeLOrExp->lAndExps; i++) {
+            for (int i = 0; i < nodeLOrExp->lAndExps->length; i++) {
                 pCodeVisit((Node*)nodeLOrExp->lAndExps->values[i]);
             }
         }
@@ -361,11 +397,13 @@ void pCodeVisit(Node* node) {
                 pCodeVisit((Node*)nodeRelExp->addExps->values[i]);
             }
         }
-        NODECASE(Number)
-        NODECASE(Character)
+        //NODECASE(Number)
+        //NODECASE(Character)
         NODECASE(ForStmt) {
+            pCodeVisit((Node*)nodeForStmt->lVal);
+            pCodeVisit((Node*)nodeForStmt->exp);
         }
-        NODECASE(StringConst)
+        //NODECASE(StringConst) 
     default:
         break;
     }
@@ -378,7 +416,7 @@ P_VAR* findPVar(char* name) {
     P_SCOPE* tmpScope = curScope;
     P_VAR* data;
     while (tmpScope != NULL) {
-        if (data = getTrieData(tmpScope->trieRoot, name)) {
+        if ((data = getTrieData(tmpScope->trieRoot, name)) != NULL) {
             return data;
         }
         tmpScope = tmpScope->parent;
@@ -394,4 +432,35 @@ int checkFuncName(char* name) {
         }
     }
     return 1;
+}
+
+// 为 1 代表合法
+int checkFuncFParam(char* name) {
+    for (int i = 0; i < curFunc->params->length; i++) {
+        if (strcmp(name, ((P_VAR*)curFunc->params->values[i])->name) == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+P_FUNC* getFunc(char* name) {
+    for (int i = 0; i < pGlobalScope->funcs->length; i++) {
+        if (strcmp(name, ((P_FUNC*)pGlobalScope->funcs->values[i])->funcName) == 0) {
+            return (P_FUNC*)pGlobalScope->funcs->values[i];
+        }
+    }
+    return NULL;
+}
+
+// 获取格式化字符串中的格式字符数目
+int getFormatNumber(char* str) {
+    int ans = 0;
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        if (str[i] == '%' && strchr("dcs", str[i + 1]) != NULL) {
+            ans++;
+        }
+    }
+    return ans;
 }
