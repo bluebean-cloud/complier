@@ -128,7 +128,9 @@ struct P_INS {
 struct P_FUNC {
     TypeBorFuncType funcType;
     P_SCOPE* scope;
+    // P_VAR*
     Vector* params;
+    // P_VAR*
     Vector* vars;
     char* funcName;
     // 为函数内局部变量编号计数

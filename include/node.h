@@ -223,6 +223,8 @@ struct FuncFParamsNode {
 struct BlockNode {
     Node node;
     Vector* blockItems;
+    // 块结束行
+    int endLine;
 };
 
 struct BlockItemNode {

@@ -6,9 +6,6 @@ extern int errOccur;
 // 开始进行语法分析
 void analyzeSyntax() {
     nodesRoot = parseCompUnit();
-    if (!errOccur) {
-        printNodeTree((Node*)nodesRoot);
-    }
 }
 
 Node newNode(NodeType NodeType, Node* parent, Token* token) {
@@ -277,6 +274,7 @@ BlockNode* parseBlock(Node* parent) {
     while (peekToken(0)->type != RBRACE) {
         pushVector(node->blockItems, parseBlockItem((Node*)node));
     }
+    node->endLine = peekToken(0)->line;
     nextToken(); // }
     return node;
 }

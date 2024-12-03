@@ -31,10 +31,7 @@
     case NODE_TYPE:;                                                                                                   \
         TYPE2NODE(NODE_TYPE)* node##NODE_TYPE = (TYPE2NODE(NODE_TYPE)*)node;
 
-
-typedef enum COMPILER_TYPE {
-    LEXER, PARSER, PCODE, LLVM, MIPS
-};
+typedef enum COMPILER_TYPE { LEXER, PARSER, PCODE, LLVM, MIPS } COMPILER_TYPE;
 
 // Lexer
 void lexAnalyse();
@@ -104,5 +101,6 @@ int checkFuncName(char* name);
 int checkFuncFParam(char* name);
 P_FUNC* getFunc(char* name);
 int getFormatNumber(char* str);
+int expIsArr(ExpNode* node, P_VAR* tmpVar);
 
 #endif

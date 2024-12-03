@@ -16,18 +16,19 @@ TypeBorFuncType curType;
 int cycleCnt = 0;
 
 extern CompUnitNode* nodesRoot;
+extern COMPILER_TYPE RUNNER_TYPE;
 extern int errOccur;
-extern int RUNNER_TYPE;
 
 void pCodeRun() {
     pCodeInit();
     pCodeVisit((Node*)nodesRoot);
-    if (errOccur || RUNNER_TYPE != 1) {
-        return;
+    if (errOccur || RUNNER_TYPE != PCODE) {
+        goto pCodeEnd;
     }
     pCodeTrans();
     while (execPCode())
         ;
+pCodeEnd:
     free(baseStack);
 }
 
@@ -228,7 +229,7 @@ void pCodeVisit(Node* node) {
             curVar->isCon = 0;
             curVar->name = nodeFuncFParam->name;
             if (checkFuncFParam(curVar->name) == 0) {
-                addError(nodeFuncFParam->node.token->line, 'b');
+                addError(nodeFuncFParam->ident->node.token->line, 'b');
                 break;
             }
             curVar->rename = (char*)malloc(sizeof(char) * (strlen(curVar->name) + 6));
@@ -244,6 +245,17 @@ void pCodeVisit(Node* node) {
             for (int i = 0; i < nodeBlock->blockItems->length; i++) {
                 pCodeVisit((Node*)nodeBlock->blockItems->values[i]);
             }
+            if (curScope->parent == curFunc->scope && curFunc->funcType != VOID) {
+                if (nodeBlock->blockItems->length == 0) {
+                    addError(nodeBlock->endLine, 'g');
+                } else {
+                    BlockItemNode* lastItem =
+                        (BlockItemNode*)nodeBlock->blockItems->values[nodeBlock->blockItems->length - 1];
+                    if (lastItem->stmt == NULL || lastItem->stmt->stmtType != RETURN_STMT) {
+                        addError(nodeBlock->endLine, 'g');
+                    }
+                }
+            }
             curScope = curScope->parent;
         }
         NODECASE(BlockItem) {
@@ -251,13 +263,20 @@ void pCodeVisit(Node* node) {
             pCodeVisit((Node*)nodeBlockItem->stmt);
         }
         NODECASE(Stmt) {
+            P_VAR* tmpVar = NULL;
+            if (nodeStmt->lVal) {
+                tmpVar = findPVar(nodeStmt->lVal->name);
+            }
             switch (nodeStmt->stmtType) {
             case EXP_STMT:
                 pCodeVisit((Node*)nodeStmt->exp);
                 break;
             case ASSIGN_STMT:
                 pCodeVisit((Node*)nodeStmt->lVal);
-                if (findPVar(nodeStmt->lVal->name)->isCon) {
+                if (tmpVar == NULL) {
+                    break;
+                }
+                if (tmpVar->isCon) {
                     addError(nodeStmt->line, 'h');
                     break;
                 }
@@ -295,14 +314,20 @@ void pCodeVisit(Node* node) {
                 break;
             case GETINT_STMT:
                 pCodeVisit((Node*)nodeStmt->lVal);
-                if (findPVar(nodeStmt->lVal->name)->isCon) {
+                if (tmpVar == NULL) {
+                    break;
+                }
+                if (tmpVar->isCon) {
                     addError(nodeStmt->line, 'h');
                     break;
                 }
                 break;
             case GETCHAR_STMT:
                 pCodeVisit((Node*)nodeStmt->lVal);
-                if (findPVar(nodeStmt->lVal->name)->isCon) {
+                if (tmpVar == NULL) {
+                    break;
+                }
+                if (tmpVar->isCon) {
                     addError(nodeStmt->line, 'h');
                     break;
                 }
@@ -347,7 +372,21 @@ void pCodeVisit(Node* node) {
                     addError(nodeUnaryExp->ident->node.token->line, 'd');
                     break;
                 }
-
+                for (int i = 0; i < tmpFunc->params->length; i++) {
+                    P_VAR* tmpVar = NULL;
+                    int isArr = expIsArr((ExpNode*)nodeUnaryExp->funcRParams->exps->values[i], tmpVar);
+                    if (tmpVar == NULL) {
+                        break;
+                    }
+                    if (((P_VAR*)tmpFunc->params->values[i])->isArr != isArr) {
+                        addError(nodeUnaryExp->ident->node.token->line, 'e');
+                        break;
+                    }
+                    if (((P_VAR*)tmpFunc->params->values[i])->varType != tmpVar->varType) {
+                        addError(nodeUnaryExp->ident->node.token->line, 'e');
+                        break;
+                    }
+                }
                 pCodeVisit((Node*)nodeUnaryExp->funcRParams);
                 break;
             case UNARY:
@@ -397,13 +436,13 @@ void pCodeVisit(Node* node) {
                 pCodeVisit((Node*)nodeRelExp->addExps->values[i]);
             }
         }
-        //NODECASE(Number)
-        //NODECASE(Character)
+        // NODECASE(Number)
+        // NODECASE(Character)
         NODECASE(ForStmt) {
             pCodeVisit((Node*)nodeForStmt->lVal);
             pCodeVisit((Node*)nodeForStmt->exp);
         }
-        //NODECASE(StringConst) 
+        // NODECASE(StringConst)
     default:
         break;
     }
@@ -430,6 +469,9 @@ int checkFuncName(char* name) {
         if (strcmp(name, ((P_FUNC*)pGlobalScope->funcs->values[i])->funcName) == 0) {
             return 0;
         }
+    }
+    if (getTrieData(pGlobalScope->trieRoot, name) != NULL) {
+        return 0;
     }
     return 1;
 }
@@ -463,4 +505,28 @@ int getFormatNumber(char* str) {
         }
     }
     return ans;
+}
+
+// 判断一个 exp 是否为数组，参数中 tmpVar 为找到的 tmpVar
+int expIsArr(ExpNode* node, P_VAR* tmpVar) {
+    if (node->addExp->mulExps->length != 1) {
+        return 0;
+    }
+    MulExpNode* mulNode = (MulExpNode*)node->addExp->mulExps->values[0];
+    if (mulNode->unaryExps->length != 1) {
+        return 0;
+    }
+    UnaryExpNode* unaryNode = (UnaryExpNode*)mulNode->unaryExps->values[0];
+    if (unaryNode->unaryExpType != PRIMARY) {
+        return 0;
+    }
+    PrimaryExpNode* primaryNode = unaryNode->primaryExp;
+    if (primaryNode->primaryType == NUMBER_PRIMARY || primaryNode->primaryType == CHARACTER_PRIMARY) {
+        return 0;
+    }
+    if (primaryNode->primaryType == EXP_PRIMARY) {
+        return expIsArr(primaryNode->exp, tmpVar);
+    }
+    tmpVar = findPVar(primaryNode->lVal->name);
+    return tmpVar->isArr && primaryNode->lVal->exp == NULL;
 }

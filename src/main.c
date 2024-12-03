@@ -7,7 +7,8 @@ const char inputFile[] = "testfile.txt";
 const char outputFile[] = "parser.txt";
 const char errFile[] = "error.txt";
 extern int errOccur;
-int RUNNER_TYPE = 1; // 1->PCode 2->LLVM 3->MIPS
+extern CompUnitNode* nodesRoot;
+COMPILER_TYPE RUNNER_TYPE = PARSER;
 
 // just go go
 int main() {
@@ -20,6 +21,18 @@ int main() {
     if (errOccur) {
         printErr();
         goto end;
+    }
+    switch (RUNNER_TYPE) {
+    case LEXER:
+        printTokens();
+        break;
+    case PARSER:
+        printNodeTree((Node*)nodesRoot);
+        break;
+    case PCODE:
+    case LLVM:
+    case MIPS:
+        break;
     }
 
 end:

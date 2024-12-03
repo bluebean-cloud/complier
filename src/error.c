@@ -6,8 +6,8 @@ extern FILE* errOut;
 extern FILE* output;
 
 int _cmp(const void* pa, const void* pb) {
-    ErrItem* a = (ErrItem*)pa;
-    ErrItem* b = (ErrItem*)pb;
+    ErrItem* a = *(ErrItem**)pa;
+    ErrItem* b = *(ErrItem**)pb;
     return a->line - b->line;
 }
 
@@ -27,7 +27,7 @@ void addError(int line, char type) {
 }
 
 void printErr() {
-    qsort(errList->values, errList->length, sizeof(ErrItem), _cmp);
+    qsort(errList->values, errList->length, sizeof(ErrItem*), _cmp);
     for (int i = 0; i < errList->length; i++) {
         fprintf(errOut, "%d %c\n", ((ErrItem*)errList->values[i])->line,
                 ((ErrItem*)errList->values[i])->type);
